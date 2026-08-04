@@ -1,0 +1,6 @@
+{
+  "name": "Athira Technology",
+  "description": "Production-ready AI SaaS website for Athira Technology. Features 7 SDLC Agent pages, Admin Dashboard, and modern enterprise design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
