@@ -2,16 +2,23 @@
   "name": "react-example",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
-    "start": "node dist/server.cjs",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "dev:vite": "tsx server.ts",
+    "build:vite": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "start:vite": "node dist/server.cjs",
+    "dev:next": "next dev -p 3000 -H 0.0.0.0",
+    "build:next": "next build",
+    "start:next": "next start -p 3000 -H 0.0.0.0",
+    "typecheck:next": "tsc --noEmit",
+    "lint:next": "next lint",
+    "dev": "npm run dev:next",
+    "build": "npm run build:next",
+    "start": "npm run start:next",
+    "clean": "rm -rf dist server.js .next"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
@@ -19,6 +26,8 @@
     "express": "^4.21.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "next": "^15.1.7",
+    "postcss": "^8.5.25",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-router-dom": "^7.18.2",
@@ -26,13 +35,14 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
+    "@types/react": "19.2.18",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3",
-    "@types/express": "^4.17.21"
+    "vite": "^6.2.3"
   }
 }
