@@ -9,7 +9,7 @@ export default function MarketingLayout({
   return (
     <>
       <Navbar />
-      <main className="flex-1 flex flex-col pt-16">
+      <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col pt-16 focus:outline-none">
         {children}
       </main>
       <Footer />

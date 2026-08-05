@@ -13,7 +13,7 @@ export function Footer() {
               <span className="text-white font-bold text-lg">Athira<span className="text-blue-500">Tech</span></span>
             </div>
             <p className="text-sm text-slate-500">
-              Enterprise-grade AI solutions for the modern software development lifecycle.
+              Exploring AI-assisted workflows for the modern software development lifecycle.
             </p>
           </div>
           <div>

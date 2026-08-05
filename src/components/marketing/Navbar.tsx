@@ -1,19 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const [menuOpenForPath, setMenuOpenForPath] = useState<string | null>(null);
+  const isOpen = menuOpenForPath === pathname;
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
+    if (!isOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpenForPath(null);
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen]);
 
   const navLinks = [
     { name: "Home", path: "/" },
@@ -23,8 +36,11 @@ export function Navbar() {
     { name: "Pricing", path: "/pricing" },
   ];
 
+  const isCurrentPage = (path: string) =>
+    path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
+
   return (
-    <nav className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-md border-b border-slate-800/60">
+    <nav aria-label="Primary navigation" className="fixed top-0 w-full z-50 bg-slate-950/50 backdrop-blur-md border-b border-slate-800/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -41,9 +57,10 @@ export function Navbar() {
                 <Link
                   key={link.name}
                   href={link.path}
+                  aria-current={isCurrentPage(link.path) ? "page" : undefined}
                   className={cn(
-                    "text-sm font-medium transition-colors hover:text-white",
-                    pathname === link.path ? "text-white" : "text-slate-400"
+                    "rounded-sm text-sm font-medium transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-4 focus-visible:ring-offset-slate-950",
+                    isCurrentPage(link.path) ? "text-white" : "text-slate-400"
                   )}
                 >
                   {link.name}
@@ -59,21 +76,23 @@ export function Navbar() {
           </div>
           <div className="md:hidden">
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
+              ref={menuButtonRef}
+              type="button"
+              onClick={() => setMenuOpenForPath(isOpen ? null : pathname)}
+              aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation"
+              className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? <X aria-hidden="true" className="h-6 w-6" /> : <Menu aria-hidden="true" className="h-6 w-6" />}
             </button>
           </div>
         </div>
       </div>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+      {isOpen && (
+          <div
+            id="mobile-navigation"
             className="md:hidden bg-slate-950/95 backdrop-blur-md border-b border-slate-800/60"
           >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -81,9 +100,11 @@ export function Navbar() {
                 <Link
                   key={link.name}
                   href={link.path}
+                  onClick={() => setMenuOpenForPath(null)}
+                  aria-current={isCurrentPage(link.path) ? "page" : undefined}
                   className={cn(
-                    "block px-3 py-2 rounded-md text-base font-medium",
-                    pathname === link.path
+                    "block px-3 py-2 rounded-md text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400",
+                    isCurrentPage(link.path)
                       ? "bg-slate-900 text-white"
                       : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   )}
@@ -93,14 +114,14 @@ export function Navbar() {
               ))}
               <Link
                 href="/contact"
+                onClick={() => setMenuOpenForPath(null)}
                 className="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white"
               >
                 Contact Us
               </Link>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+      )}
     </nav>
   );
 }

@@ -19,10 +19,14 @@ const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
 );
 CardHeader.displayName = "CardHeader";
 
-const CardTitle = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-xl font-semibold leading-none tracking-tight text-white", className)} {...props} />
-  )
+type CardTitleProps = HTMLAttributes<HTMLHeadingElement> & {
+  as?: "h2" | "h3";
+};
+
+const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
+  ({ as: Heading = "h3", className, ...props }, ref) => (
+    <Heading ref={ref} className={cn("text-xl font-semibold leading-none tracking-tight text-white", className)} {...props} />
+  ),
 );
 CardTitle.displayName = "CardTitle";
 

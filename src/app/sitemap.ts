@@ -1,26 +1,22 @@
 import { MetadataRoute } from "next";
-import { agentsData } from "../data/agents";
+import { absoluteUrl } from "../config/site";
+import { agentsData } from "../content/agents";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://athiratech.example.com";
-
   const agentUrls = agentsData.map((agent) => ({
-    url: `${baseUrl}/agents/${agent.slug}`,
-    lastModified: new Date(),
+    url: absoluteUrl(`/agents/${agent.slug}`),
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
   return [
     {
-      url: baseUrl,
-      lastModified: new Date(),
+      url: absoluteUrl("/"),
       changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${baseUrl}/agents`,
-      lastModified: new Date(),
+      url: absoluteUrl("/agents"),
       changeFrequency: "weekly",
       priority: 0.9,
     },

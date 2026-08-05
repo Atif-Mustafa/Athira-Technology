@@ -3,15 +3,15 @@ import { Badge } from "../../../components/ui/Badge";
 
 export default function AdminDashboardPage() {
   const stats = [
-    { label: "Active Agent Runs", value: "24", change: "+3 today", positive: true },
-    { label: "Lines of Code Generated", value: "128,492", change: "+12,400 this week", positive: true },
-    { label: "Successful Deployments", value: "14", change: "100% success rate", positive: true },
+    { label: "Agent Runs", value: "—", detail: "No live data connected" },
+    { label: "Generated Code", value: "—", detail: "No live data connected" },
+    { label: "Deployments", value: "—", detail: "No live data connected" },
   ];
 
   const activities = [
-    { agent: "DevAgent-Alpha", task: "Refactored user authentication flow", time: "10 mins ago", status: "Completed" },
-    { agent: "TestAgent-04", task: "Running regression suite on PR #892", time: "25 mins ago", status: "In Progress" },
-    { agent: "DeployAgent-Prod", task: "Pushed v2.4.1 to production cluster", time: "2 hours ago", status: "Completed" },
+    { agent: "Example Agent", task: "Example planning activity", time: "Static placeholder", status: "Demo" },
+    { agent: "Example Agent", task: "Example testing activity", time: "Static placeholder", status: "Demo" },
+    { agent: "Example Agent", task: "Example deployment activity", time: "Static placeholder", status: "Demo" },
   ];
 
   return (
@@ -26,9 +26,7 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <h3 className="text-3xl font-bold text-white mb-1">{stat.value}</h3>
-              <p className={stat.positive ? "text-emerald-400 text-xs font-medium" : "text-amber-400 text-xs font-medium"}>
-                {stat.change}
-              </p>
+              <p className="text-slate-500 text-xs font-medium">{stat.detail}</p>
             </CardContent>
           </Card>
         ))}
@@ -47,7 +45,7 @@ export default function AdminDashboardPage() {
                   <p className="text-slate-500 text-xs mt-1">{activity.agent} • {activity.time}</p>
                 </div>
                 <div>
-                  <Badge variant={activity.status === 'Completed' ? 'success' : 'warning'}>
+                  <Badge variant="outline">
                     {activity.status}
                   </Badge>
                 </div>
