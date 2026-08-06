@@ -26,7 +26,7 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <h3 className="text-3xl font-bold text-white mb-1">{stat.value}</h3>
-              <p className="text-slate-500 text-xs font-medium">{stat.detail}</p>
+              <p className="text-slate-400 text-xs font-medium">{stat.detail}</p>
             </CardContent>
           </Card>
         ))}
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
               <div key={i} className="flex items-center justify-between p-4 bg-slate-950/50 rounded-xl border border-white/5">
                 <div>
                   <p className="text-white text-sm font-medium">{activity.task}</p>
-                  <p className="text-slate-500 text-xs mt-1">{activity.agent} • {activity.time}</p>
+                  <p className="text-slate-400 text-xs mt-1">{activity.agent} • {activity.time}</p>
                 </div>
                 <div>
                   <Badge variant="outline">

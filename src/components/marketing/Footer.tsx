@@ -12,7 +12,7 @@ export function Footer() {
               </div>
               <span className="text-white font-bold text-lg">Athira<span className="text-blue-500">Tech</span></span>
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-400">
               Exploring AI-assisted workflows for the modern software development lifecycle.
             </p>
           </div>

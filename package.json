@@ -11,6 +11,12 @@
     "start": "next start -p 3000 -H 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit --incremental false",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "node scripts/run-playwright.mjs",
+    "test:e2e:smoke": "node scripts/run-playwright.mjs tests/e2e/smoke.spec.ts",
+    "test:a11y": "node scripts/run-playwright.mjs tests/e2e/accessibility.spec.ts",
     "clean": "node scripts/clean.mjs"
   },
   "dependencies": {
@@ -23,13 +29,23 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
     "@types/node": "^22.14.0",
     "@types/react": "19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.25",
     "tailwindcss": "^4.1.14",
-    "typescript": "~5.8.2"
+    "typescript": "~5.8.2",
+    "vitest": "^4.1.10"
   }
 }

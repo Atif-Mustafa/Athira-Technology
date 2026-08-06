@@ -1,6 +1,13 @@
 import { rm } from "node:fs/promises";
 
-const generatedDirectories = [".next", "build", "coverage", "dist"];
+const generatedDirectories = [
+  ".next",
+  "build",
+  "coverage",
+  "dist",
+  "playwright-report",
+  "test-results",
+];
 
 await Promise.all(
   generatedDirectories.map((directory) =>
