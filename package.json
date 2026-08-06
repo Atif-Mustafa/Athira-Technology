@@ -13,6 +13,8 @@
     "typecheck": "tsc --noEmit --incremental false",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:api": "vitest run tests/api",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "node scripts/run-playwright.mjs",
     "test:e2e:smoke": "node scripts/run-playwright.mjs tests/e2e/smoke.spec.ts",
@@ -20,13 +22,17 @@
     "clean": "node scripts/clean.mjs"
   },
   "dependencies": {
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.2",
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "next": "16.3.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "tailwind-merge": "^3.6.0"
+    "resend": "^6.18.1",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",

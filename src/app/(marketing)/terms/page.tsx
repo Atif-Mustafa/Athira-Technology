@@ -26,9 +26,10 @@ const sections = [
     ],
   },
   {
-    title: "No online transaction or submission",
+    title: "Contact submissions and no online transactions",
     paragraphs: [
-      "The website does not implement checkout, payment processing, subscriptions, contract acceptance, or contact-form delivery. Pricing labels are indicative engagement structures only. Commercial scope, fees, responsibilities, and deliverables require a separately reviewed agreement.",
+      "The website accepts business enquiries through a validated contact form and attempts delivery through a configured email provider. Provider acceptance confirms transmission only; it does not create a contract, promise a response, or confirm that Athira Technology has accepted a project.",
+      "The website does not implement checkout, payment processing, subscriptions, or online contract acceptance. Pricing labels are indicative engagement structures only. Commercial scope, fees, responsibilities, and deliverables require a separately reviewed agreement.",
     ],
   },
   {
@@ -41,7 +42,7 @@ const sections = [
     title: "Intellectual property and acceptable use",
     paragraphs: [
       "The final terms should identify the legal owner of website content, permitted reuse, trademarks, and procedures for reporting concerns. Until reviewed, this draft should not be relied on as a complete license or enforcement policy.",
-      "Visitors should not attempt to disrupt the website, bypass technical restrictions, probe non-public systems, or submit malicious content. The current public form is disabled and must not be used for sensitive information.",
+      "Visitors should not attempt to disrupt the website, bypass technical restrictions, probe non-public systems, evade abuse controls, or submit malicious content. The public form must not be used for passwords, source code, financial information, identity documents, health data, or other sensitive material.",
     ],
   },
   {

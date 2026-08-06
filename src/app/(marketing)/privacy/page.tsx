@@ -15,14 +15,22 @@ const sections = [
   {
     title: "Current website behavior",
     paragraphs: [
-      "This repository implements a public informational website. It does not include user accounts, analytics providers, advertising trackers, a database, a CMS, contact-form delivery, or production AI features.",
-      "The demonstration contact form is intentionally disabled. Information typed into it is not submitted by the application. Visitors should not enter confidential, regulated, or sensitive information.",
+      "This repository implements a public informational website and an email-delivered business-enquiry form. It does not include user accounts, analytics providers, advertising trackers, a contact database, a CMS, or production AI features.",
+      "The contact form must not be used for passwords, source code, payment details, identity documents, health information, or other confidential, regulated, or sensitive information.",
+    ],
+  },
+  {
+    title: "Contact information submitted",
+    paragraphs: [
+      "The form collects a full name, work email, company name, area of interest, message, privacy acknowledgment, and optional project-stage and indicative-budget selections. A hidden honeypot field is used to identify basic automated submissions.",
+      "The application uses this information only to deliver and respond to the business enquiry. It does not add the visitor to a marketing list and does not send an automatic marketing email.",
     ],
   },
   {
     title: "Technical request information",
     paragraphs: [
-      "A hosting, network, or security provider may process ordinary technical request information such as an IP address, user agent, requested path, timestamp, and diagnostic logs when the website is deployed. This repository does not select a production host or define its retention settings. The final notice must be updated to match the actual deployment and provider agreements.",
+      "Vercel and network providers may process ordinary request information such as an IP address, user agent, requested path, timestamp, and diagnostic logs. For contact rate limiting, the server reads the Vercel-controlled client address, immediately converts it to a keyed one-way hash, and sends only that opaque identifier to the rate-limit service. The application does not log the raw address.",
+      "Operational contact logs contain a timestamp, request identifier, outcome categories, validation and rate-limit state, provider acceptance category, and duration. They exclude names, complete email addresses, messages, raw IP addresses, API keys, recipient addresses, and provider payloads.",
     ],
   },
   {
@@ -32,22 +40,24 @@ const sections = [
     ],
   },
   {
-    title: "Future contact handling",
+    title: "Email delivery and abuse controls",
     paragraphs: [
-      "A future milestone may connect the contact form to a secure server-side delivery process. Before that happens, Athira Technology must define the responsible organization, legal basis or business purpose, required fields, validation, recipients, retention period, deletion process, access controls, and any service providers.",
-      "The enabled form should collect only the minimum information needed for a business inquiry and must not request passwords, source code, government identifiers, health data, financial account information, or other unnecessary sensitive data.",
+      "Accepted enquiries are sent through Resend to one configured Athira Technology recipient. The validated visitor email is used as the reply-to address, not as the sender. The application does not keep a database copy, but the configured recipient mailbox and Resend may retain delivery and message records under their settings and agreements.",
+      "Upstash Redis provides distributed rate limiting for production. It receives a keyed hash rather than the raw client address. A small process-local limiter is permitted only for local development and automated tests and is not treated as production protection.",
     ],
   },
   {
-    title: "Data sharing and international handling",
+    title: "Access, retention, and service providers",
     paragraphs: [
-      "This draft does not claim that contact data, analytics data, or AI workflow data is currently shared or transferred because those systems are not implemented here. The final notice must identify actual processors, locations, and transfer mechanisms after the production architecture is approved.",
+      "Access should be limited to approved Athira Technology personnel who handle business enquiries and to the service providers required for hosting, email delivery, and rate limiting. This draft does not confirm contractual roles, data-processing agreements, storage regions, or international-transfer mechanisms; those details require owner and legal review against the selected accounts and deployment region.",
+      "Retention period requiring business approval: [PROJECT OWNER TO APPROVE MAILBOX, RESEND, UPSTASH, AND VERCEL RETENTION SETTINGS BEFORE LAUNCH]. No retention period is invented by this draft.",
     ],
   },
   {
     title: "Your choices and contact channel",
     paragraphs: [
-      "No privacy-request channel is configured by this repository. A verified contact address and response process must be established before this notice can become final. Applicable access, correction, deletion, objection, or complaint rights depend on the organization, visitor location, and actual processing activity and require legal review.",
+      "The contact form includes an acknowledgment linking to this draft, but this page does not claim that acknowledgment establishes a particular legal basis or valid consent under any law. Applicable access, correction, deletion, objection, or complaint rights depend on the responsible legal entity, visitor location, and actual processing activity.",
+      "A verified privacy-request address and response procedure must be approved before launch. Until then, the configured public contact channel is the only website contact path, and this draft must not be treated as a final rights procedure.",
     ],
   },
 ] as const;
@@ -78,7 +88,7 @@ export default function PrivacyPage() {
           </div>
         </Container>
       </Section>
-      <CallToAction title="Have a question about the planned website process?" description="The current contact form is a static demonstration and does not transmit information. Review it to understand the proposed fields and future handling boundary." primaryLabel="Review contact status" secondaryLabel="Return to the product" secondaryHref="/ai-software-engineer" />
+      <CallToAction title="Have a question about the contact process?" description="The contact form validates and abuse-checks business enquiries before asking the configured email provider to deliver them. Do not submit sensitive information." primaryLabel="Review the contact form" secondaryLabel="Return to the product" secondaryHref="/ai-software-engineer" />
     </>
   );
 }

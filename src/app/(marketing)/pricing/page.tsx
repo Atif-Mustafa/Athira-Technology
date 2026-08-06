@@ -66,7 +66,7 @@ export default function PricingPage() {
           <FaqList faqs={pricingFaqs} />
         </Container>
       </Section>
-      <CallToAction title="Get a quote based on real scope" description="Tell us which workflow, systems, reviewers, and constraints are involved. The contact form is currently a static demonstration, so no information is transmitted yet." primaryLabel="Review the contact options" secondaryLabel="Explore services" secondaryHref="/services" />
+      <CallToAction title="Get a quote based on real scope" description="Tell us which workflow, systems, reviewers, and constraints are involved. The secure contact workflow validates and email-delivers accepted business enquiries without application database storage." primaryLabel="Start an enquiry" secondaryLabel="Explore services" secondaryHref="/services" />
     </>
   );
 }

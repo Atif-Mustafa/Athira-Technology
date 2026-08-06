@@ -18,7 +18,7 @@ function getButtonClassName({
   size = "md",
 }: ButtonStyleProps & { className?: string }) {
   const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20 border border-transparent",
+    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-900/20 border border-transparent",
     secondary: "bg-slate-800 text-white hover:bg-slate-700 border border-transparent",
     outline: "border border-slate-700 bg-slate-900/50 text-white hover:bg-slate-800",
     ghost: "text-slate-300 hover:text-white hover:bg-slate-800 border border-transparent",

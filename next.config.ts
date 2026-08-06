@@ -1,4 +1,10 @@
 import type { NextConfig } from "next";
+import { createSecurityHeaders } from "./src/config/security";
+
+const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+const isProductionHttps =
+  process.env.VERCEL_ENV === "production" &&
+  Boolean(configuredSiteUrl?.startsWith("https://"));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -7,12 +13,10 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
-        ],
+        headers: createSecurityHeaders({
+          isDevelopment: process.env.NODE_ENV === "development",
+          isProductionHttps,
+        }),
       },
     ];
   },

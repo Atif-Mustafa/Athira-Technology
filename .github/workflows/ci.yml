@@ -43,7 +43,10 @@ jobs:
         run: npm run typecheck
 
       - name: Run unit and component tests
-        run: npm run test:run
+        run: npm run test:unit
+
+      - name: Run contact API tests
+        run: npm run test:api
 
       - name: Build production application
         run: npm run build
