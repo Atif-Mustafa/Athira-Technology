@@ -41,8 +41,10 @@ describe("marketing navigation", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(document.getElementById("mobile-navigation")).toBeInTheDocument();
 
-    const mobileHomeLink = screen.getAllByRole("link", { name: "Home" }).at(-1);
-    mobileHomeLink?.focus();
+    const mobileProductLink = screen
+      .getAllByRole("link", { name: "Product" })
+      .at(-1);
+    mobileProductLink?.focus();
     await user.keyboard("{Escape}");
 
     expect(document.getElementById("mobile-navigation")).not.toBeInTheDocument();
@@ -53,12 +55,10 @@ describe("marketing navigation", () => {
   it("marks the active navigation section as the current page", () => {
     render(<Navbar />);
 
-    expect(screen.getByRole("link", { name: "Agents" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "SDLC Agents" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(screen.getByRole("link", { name: "Home" })).not.toHaveAttribute(
-      "aria-current",
-    );
+    expect(screen.getByRole("link", { name: "Product" })).not.toHaveAttribute("aria-current");
   });
 });

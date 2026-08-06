@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const environmentKey = "NEXT_PUBLIC_SITE_URL";
 const originalSiteUrl = process.env[environmentKey];
+const contactEnvironmentKey = "NEXT_PUBLIC_CONTACT_EMAIL";
+const originalContactEmail = process.env[contactEnvironmentKey];
 
 async function loadSiteConfig(configuredUrl?: string) {
   vi.resetModules();
@@ -20,6 +22,12 @@ afterEach(() => {
     delete process.env[environmentKey];
   } else {
     process.env[environmentKey] = originalSiteUrl;
+  }
+
+  if (originalContactEmail === undefined) {
+    delete process.env[contactEnvironmentKey];
+  } else {
+    process.env[contactEnvironmentKey] = originalContactEmail;
   }
 
   vi.resetModules();
@@ -53,4 +61,15 @@ describe("site configuration", () => {
       expect(siteConfig.url.href).toBe("http://localhost:3000/");
     },
   );
+
+  it("exposes only a syntactically valid configured public contact email", async () => {
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL = "  hello@athira.test  ";
+    const { siteConfig } = await loadSiteConfig();
+
+    expect(siteConfig.contactEmail).toBe("hello@athira.test");
+
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL = "not-an-email";
+    const reloaded = await loadSiteConfig();
+    expect(reloaded.siteConfig.contactEmail).toBeNull();
+  });
 });

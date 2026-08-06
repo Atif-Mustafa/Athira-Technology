@@ -1,14 +1,28 @@
 import type { Metadata } from "next";
 import { siteConfig } from "../config/site";
+import { organizationStructuredData } from "../lib/seo";
+import { StructuredData } from "../components/seo/StructuredData";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
     template: "%s | Athira Technology",
-    default: "Athira Technology | AI-Assisted SDLC",
+    default: "Athira Technology | Human-Reviewed AI for the SDLC",
   },
-  description: "Explore Athira Technology's planned AI-assisted components for the software development lifecycle.",
+  description: siteConfig.description,
   metadataBase: siteConfig.url,
+  openGraph: {
+    type: "website",
+    siteName: siteConfig.name,
+    title: "Athira Technology | Human-Reviewed AI for the SDLC",
+    description: siteConfig.description,
+    url: siteConfig.url,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Athira Technology | Human-Reviewed AI for the SDLC",
+    description: siteConfig.description,
+  },
 };
 
 export default function RootLayout({
@@ -25,6 +39,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        <StructuredData data={organizationStructuredData()} />
         {children}
       </body>
     </html>

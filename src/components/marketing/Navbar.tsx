@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { primaryNavigation } from "../../content/marketing";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -28,14 +29,6 @@ export function Navbar() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
 
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "AI Engineer", path: "/ai-software-engineer" },
-    { name: "Agents", path: "/agents" },
-    { name: "Services", path: "/services" },
-    { name: "Pricing", path: "/pricing" },
-  ];
-
   const isCurrentPage = (path: string) =>
     path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
 
@@ -44,37 +37,37 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
+            <Link href="/" aria-label="Athira Technology home" className="flex items-center space-x-2 rounded-sm">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <div className="w-4 h-4 bg-white rounded-full opacity-90" />
               </div>
               <span className="text-white font-bold text-xl tracking-tight">Athira<span className="text-blue-500">Tech</span></span>
             </Link>
           </div>
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              {navLinks.map((link) => (
+              {primaryNavigation.map((link) => (
                 <Link
-                  key={link.name}
-                  href={link.path}
-                  aria-current={isCurrentPage(link.path) ? "page" : undefined}
+                  key={link.label}
+                  href={link.href}
+                  aria-current={isCurrentPage(link.href) ? "page" : undefined}
                   className={cn(
                     "rounded-sm text-sm font-medium transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-4 focus-visible:ring-offset-slate-950",
-                    isCurrentPage(link.path) ? "text-white" : "text-slate-400"
+                    isCurrentPage(link.href) ? "text-white" : "text-slate-400"
                   )}
                 >
-                  {link.name}
+                  {link.label}
                 </Link>
               ))}
               <Link
                 href="/contact"
-                className="bg-blue-600 text-white text-sm font-semibold px-5 py-2 rounded-full hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-all"
+                className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-900/20 transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
               >
-                Contact Us
+                Plan a discovery
               </Link>
             </div>
           </div>
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               ref={menuButtonRef}
               type="button"
@@ -93,23 +86,23 @@ export function Navbar() {
       {isOpen && (
           <div
             id="mobile-navigation"
-            className="md:hidden bg-slate-950/95 backdrop-blur-md border-b border-slate-800/60"
+            className="lg:hidden bg-slate-950/95 backdrop-blur-md border-b border-slate-800/60"
           >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navLinks.map((link) => (
+              {primaryNavigation.map((link) => (
                 <Link
-                  key={link.name}
-                  href={link.path}
+                  key={link.label}
+                  href={link.href}
                   onClick={() => setMenuOpenForPath(null)}
-                  aria-current={isCurrentPage(link.path) ? "page" : undefined}
+                  aria-current={isCurrentPage(link.href) ? "page" : undefined}
                   className={cn(
                     "block px-3 py-2 rounded-md text-base font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-400",
-                    isCurrentPage(link.path)
+                    isCurrentPage(link.href)
                       ? "bg-slate-900 text-white"
                       : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   )}
                 >
-                  {link.name}
+                  {link.label}
                 </Link>
               ))}
               <Link
@@ -117,7 +110,7 @@ export function Navbar() {
                 onClick={() => setMenuOpenForPath(null)}
                 className="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white"
               >
-                Contact Us
+                Plan a discovery
               </Link>
             </div>
           </div>

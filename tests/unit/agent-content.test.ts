@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   agentIconKeys,
   agentsData,
-  getAgentBySlug,
+  getAdjacentAgents,
 } from "@/content/agents";
 
 function containsNonSerializableValue(
@@ -55,31 +55,50 @@ describe("agent content", () => {
     expect(() => JSON.parse(JSON.stringify(agentsData))).not.toThrow();
   });
 
-  it("retains the approved planning content", () => {
-    const planningAgent = getAgentBySlug("planning");
-
-    expect(planningAgent).toBeDefined();
-    expect(planningAgent?.capabilities.length).toBeGreaterThan(0);
-    expect(planningAgent?.workflow.length).toBeGreaterThan(0);
-    expect(planningAgent?.benefits.length).toBeGreaterThan(0);
-    expect(planningAgent?.useCases.length).toBeGreaterThan(0);
+  it("provides every required field for all seven complete agents", () => {
+    for (const agent of agentsData) {
+      expect(agent.purpose.length).toBeGreaterThan(80);
+      expect(agent.problems.length).toBeGreaterThanOrEqual(3);
+      expect(agent.inputs.length).toBeGreaterThanOrEqual(3);
+      expect(agent.workflow.length).toBeGreaterThanOrEqual(4);
+      expect(agent.outputs.length).toBeGreaterThanOrEqual(3);
+      expect(agent.capabilities.length).toBeGreaterThanOrEqual(4);
+      expect(agent.humanCheckpoints.length).toBeGreaterThanOrEqual(3);
+      expect(agent.exampleScenario.steps.length).toBeGreaterThanOrEqual(4);
+      expect(agent.integrations.length).toBeGreaterThanOrEqual(3);
+      expect(agent.governance.length).toBeGreaterThanOrEqual(3);
+      expect(agent.faqs.length).toBeGreaterThanOrEqual(2);
+      expect(agent.seoTitle).toBeTruthy();
+      expect(agent.seoDescription).toBeTruthy();
+    }
   });
 
-  it("returns intentionally incomplete agents without throwing", () => {
-    const incompleteAgents = agentsData.filter(
-      (agent) => agent.capabilities.length === 0,
+  it("keeps agent purposes and scenarios specific to each lifecycle stage", () => {
+    expect(new Set(agentsData.map((agent) => agent.purpose))).toHaveProperty(
+      "size",
+      7,
     );
+    expect(
+      new Set(agentsData.map((agent) => agent.exampleScenario.title)),
+    ).toHaveProperty("size", 7);
+  });
 
-    expect(incompleteAgents).toHaveLength(6);
-
-    for (const agent of incompleteAgents) {
-      expect(() => getAgentBySlug(agent.slug)).not.toThrow();
-      expect(getAgentBySlug(agent.slug)).toMatchObject({
-        capabilities: [],
-        workflow: [],
-        benefits: [],
-        useCases: [],
-      });
-    }
+  it("resolves adjacent lifecycle navigation without wrapping", () => {
+    expect(getAdjacentAgents("planning")).toMatchObject({
+      previous: undefined,
+      next: { slug: "design" },
+    });
+    expect(getAdjacentAgents("testing")).toMatchObject({
+      previous: { slug: "development" },
+      next: { slug: "deployment" },
+    });
+    expect(getAdjacentAgents("documentation")).toMatchObject({
+      previous: { slug: "monitoring" },
+      next: undefined,
+    });
+    expect(getAdjacentAgents("unknown")).toEqual({
+      previous: undefined,
+      next: undefined,
+    });
   });
 });

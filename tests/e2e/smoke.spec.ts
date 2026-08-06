@@ -1,75 +1,65 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const implementedHtmlRoutes = [
-  { path: "/", publicPage: true },
-  { path: "/agents", publicPage: true },
-  { path: "/agents/planning", publicPage: true },
-  { path: "/agents/design", publicPage: true, incomplete: true },
-  { path: "/agents/development", publicPage: true, incomplete: true },
-  { path: "/agents/testing", publicPage: true, incomplete: true },
-  { path: "/agents/deployment", publicPage: true, incomplete: true },
-  { path: "/agents/monitoring", publicPage: true, incomplete: true },
-  { path: "/agents/documentation", publicPage: true, incomplete: true },
-  { path: "/admin/dashboard", publicPage: false, adminDemo: true },
+const blogArticlePaths = [
+  "/blog/multi-agent-systems-for-the-sdlc",
+  "/blog/human-approval-in-ai-assisted-development",
+  "/blog/traceable-ai-engineering-workflows",
 ] as const;
 
-const unimplementedRoutes = [
+const publicHtmlRoutes = [
+  "/",
   "/ai-software-engineer",
+  "/agents",
+  "/agents/planning",
+  "/agents/design",
+  "/agents/development",
+  "/agents/testing",
+  "/agents/deployment",
+  "/agents/monitoring",
+  "/agents/documentation",
   "/services",
   "/pricing",
   "/blog",
+  ...blogArticlePaths,
   "/contact",
   "/privacy",
   "/terms",
 ] as const;
 
+const primaryLinks = [
+  { name: "Product", href: "/ai-software-engineer" },
+  { name: "SDLC Agents", href: "/agents" },
+  { name: "Services", href: "/services" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "Blog", href: "/blog" },
+  { name: "Contact", href: "/contact" },
+] as const;
+
 async function expectNoHorizontalOverflow(page: Page) {
   const hasOverflow = await page.evaluate(
-    () =>
-      document.documentElement.scrollWidth >
-      document.documentElement.clientWidth + 1,
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
   );
-
   expect(hasOverflow).toBe(false);
 }
 
-for (const route of implementedHtmlRoutes) {
-  test(`${route.path} renders without runtime or responsive failures`, async ({
-    page,
-  }) => {
+for (const path of publicHtmlRoutes) {
+  test(`${path} renders as a complete public page`, async ({ page }) => {
     const pageErrors: Error[] = [];
     page.on("pageerror", (error) => pageErrors.push(error));
 
     await page.setViewportSize({ width: 1280, height: 900 });
-    const response = await page.goto(route.path);
+    const response = await page.goto(path);
 
     expect(response?.status()).toBe(200);
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("h1")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Skip to main content" })).toHaveAttribute("href", "#main-content");
+    await expect(page.locator("main")).not.toContainText("Internal Server Error");
+    await expect(page.locator("main a.inline-flex, main button").first()).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    if (route.publicPage) {
-      await expect(
-        page.getByRole("link", { name: "Skip to main content" }),
-      ).toHaveAttribute("href", "#main-content");
-    }
-
-    if ("incomplete" in route && route.incomplete) {
-      await expect(
-        page.getByText(
-          "Detailed capability information is planned for a future product milestone.",
-        ),
-      ).toBeVisible();
-    }
-
-    if ("adminDemo" in route && route.adminDemo) {
-      await expect(
-        page.getByText(/Demo only: this page uses static placeholder data/),
-      ).toBeVisible();
-      await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-        "content",
-        /noindex/,
-      );
+    for (const link of primaryLinks) {
+      await expect(page.getByRole("link", { name: link.name, exact: true }).first()).toHaveAttribute("href", link.href);
     }
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -78,16 +68,22 @@ for (const route of implementedHtmlRoutes) {
   });
 }
 
+test("admin dashboard remains a noindex static demonstration", async ({ page }) => {
+  const response = await page.goto("/admin/dashboard");
+
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("h1")).toHaveCount(1);
+  await expect(page.getByText(/Demo only: this page uses static placeholder data/)).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+});
+
 test("health endpoint returns an OK response", async ({ request }) => {
   const response = await request.get("/api/health");
-
   expect(response.status()).toBe(200);
   await expect(response.json()).resolves.toMatchObject({ status: "ok" });
 });
 
-test("robots endpoint is available and protects non-public areas", async ({
-  request,
-}) => {
+test("robots endpoint is available and protects non-public areas", async ({ request }) => {
   const response = await request.get("/robots.txt");
   const body = await response.text();
 
@@ -97,31 +93,25 @@ test("robots endpoint is available and protects non-public areas", async ({
   expect(body).toContain("Disallow: /api/");
 });
 
-test("sitemap contains only implemented public routes", async ({ request }) => {
+test("sitemap contains every indexable public route and excludes private areas", async ({ request }) => {
   const response = await request.get("/sitemap.xml");
   const body = await response.text();
+  const sitemapPaths = [...body.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]).pathname);
 
   expect(response.status()).toBe(200);
   expect(response.headers()["content-type"]).toContain("application/xml");
-  expect(body).toContain("/agents/documentation");
-
-  for (const route of unimplementedRoutes) {
-    expect(body).not.toContain(`<loc>${route}</loc>`);
-  }
+  for (const path of publicHtmlRoutes) expect(sitemapPaths).toContain(path);
+  expect(sitemapPaths).not.toContain("/admin/dashboard");
+  expect(sitemapPaths.some((path) => path.startsWith("/api/"))).toBe(false);
 });
 
-for (const route of unimplementedRoutes) {
-  test(`${route} returns the custom 404 page`, async ({ page }) => {
-    const pageErrors: Error[] = [];
-    page.on("pageerror", (error) => pageErrors.push(error));
+test("an unknown path returns the custom 404 page", async ({ page }) => {
+  const pageErrors: Error[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error));
 
-    const response = await page.goto(route);
-
-    expect(response?.status()).toBe(404);
-    await expect(
-      page.getByRole("heading", { name: "Page Not Found" }),
-    ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Return Home" })).toBeVisible();
-    expect(pageErrors).toEqual([]);
-  });
-}
+  const response = await page.goto("/this-route-does-not-exist");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "Page Not Found" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Return Home" })).toBeVisible();
+  expect(pageErrors).toEqual([]);
+});

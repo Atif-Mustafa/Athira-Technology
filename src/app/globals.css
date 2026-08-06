@@ -15,9 +15,41 @@
     @apply bg-slate-950 text-slate-200 antialiased font-sans selection:bg-blue-500 selection:text-white;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
+  ::selection {
+    background: #2563eb;
+    color: #ffffff;
+  }
+
   :focus-visible {
     outline: 2px solid #60a5fa;
     outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .content-list {
+    @apply space-y-3 text-slate-300;
+  }
+
+  .content-list > li {
+    @apply relative pl-6 leading-7;
+  }
+
+  .content-list > li::before {
+    content: "";
+    @apply absolute left-0 top-[0.7rem] h-1.5 w-1.5 rounded-full bg-blue-400;
+  }
+
+  .article-copy p {
+    @apply text-base leading-8 text-slate-300;
+  }
+
+  .article-copy h2 {
+    @apply mt-12 text-2xl font-bold tracking-tight text-white sm:text-3xl;
   }
 }
 
