@@ -5,6 +5,7 @@ const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 const isProductionHttps =
   process.env.VERCEL_ENV === "production" &&
   Boolean(configuredSiteUrl?.startsWith("https://"));
+const isPreview = process.env.VERCEL_ENV === "preview";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -16,6 +17,7 @@ const nextConfig: NextConfig = {
         headers: createSecurityHeaders({
           isDevelopment: process.env.NODE_ENV === "development",
           isProductionHttps,
+          isPreview,
         }),
       },
     ];

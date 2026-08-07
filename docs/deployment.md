@@ -11,7 +11,7 @@ This runbook prepares the Athira Technology website for Vercel preview and produ
 - Upstash Redis provides distributed rate limiting to Vercel functions.
 - The application stores no contact database record.
 
-Node.js 20.9 or newer is required. Configure Vercel to use Node.js 22 to match CI.
+Node.js 22 is required. Configure Vercel to use Node.js 22 so deployment builds match local development and CI.
 
 ## 1. Connect the repository
 

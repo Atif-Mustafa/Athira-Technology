@@ -1,6 +1,7 @@
 export type SecurityHeaderOptions = {
   isDevelopment: boolean;
   isProductionHttps: boolean;
+  isPreview?: boolean;
 };
 
 export function createContentSecurityPolicy({
@@ -57,6 +58,13 @@ export function createSecurityHeaders(options: SecurityHeaderOptions) {
     headers.push({
       key: "Strict-Transport-Security",
       value: "max-age=31536000",
+    });
+  }
+
+  if (options.isPreview) {
+    headers.push({
+      key: "X-Robots-Tag",
+      value: "noindex, nofollow",
     });
   }
 

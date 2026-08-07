@@ -15,7 +15,7 @@ This repository does **not** contain production AI-agent execution, customer acc
 - Vitest, React Testing Library, Playwright, and axe-core
 - npm and `package-lock.json` as the only package-management path
 
-Node.js 20.9 or newer is required. CI uses Node.js 22.
+Node.js 22 is required so local development, GitHub Actions, and Vercel use the same runtime major.
 
 ## Setup
 
