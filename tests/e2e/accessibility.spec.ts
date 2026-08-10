@@ -32,6 +32,24 @@ for (const route of accessibilityRoutes) {
   });
 }
 
+test("open desktop agent navigation has no serious or critical axe violations", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/agents/testing");
+  await page.getByRole("button", { name: "SDLC Agents" }).click();
+  await expect(page.locator("#desktop-agents-navigation")).toBeVisible();
+  await expectNoBlockingViolations(page);
+});
+
+test("open mobile agent navigation has no serious or critical axe violations", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/agents/testing");
+  await page.getByRole("button", { name: "Open navigation menu" }).click();
+  const mobileNavigation = page.locator("#mobile-navigation");
+  await mobileNavigation.getByRole("button", { name: "SDLC Agents" }).click();
+  await expect(page.locator("#mobile-agents-navigation")).toBeVisible();
+  await expectNoBlockingViolations(page);
+});
+
 test("contact client-validation state has no serious or critical axe violations", async ({ page }) => {
   await page.goto("/contact");
   await page.getByRole("button", { name: "Send enquiry" }).click();

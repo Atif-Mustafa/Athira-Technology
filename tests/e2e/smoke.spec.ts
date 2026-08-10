@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { agentsData } from "../../src/content/agents";
 
 const blogArticlePaths = [
   "/blog/multi-agent-systems-for-the-sdlc",
@@ -28,12 +29,16 @@ const publicHtmlRoutes = [
 
 const primaryLinks = [
   { name: "Product", href: "/ai-software-engineer" },
-  { name: "SDLC Agents", href: "/agents" },
   { name: "Services", href: "/services" },
   { name: "Pricing", href: "/pricing" },
   { name: "Blog", href: "/blog" },
   { name: "Contact", href: "/contact" },
 ] as const;
+
+const agentNavigationLinks = agentsData.map((agent) => ({
+  href: `/agents/${agent.slug}`,
+  name: agent.name.replace(/ Agent$/, ""),
+}));
 
 async function expectNoHorizontalOverflow(page: Page) {
   const hasOverflow = await page.evaluate(
@@ -61,12 +66,89 @@ for (const path of publicHtmlRoutes) {
     for (const link of primaryLinks) {
       await expect(page.getByRole("link", { name: link.name, exact: true }).first()).toHaveAttribute("href", link.href);
     }
+    await expect(page.getByRole("button", { name: "SDLC Agents" })).toHaveAttribute(
+      "aria-controls",
+      "desktop-agents-navigation",
+    );
 
     await page.setViewportSize({ width: 390, height: 844 });
     await expectNoHorizontalOverflow(page);
     expect(pageErrors).toEqual([]);
   });
 }
+
+test("desktop SDLC Agents disclosure supports keyboard navigation", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/agents/testing");
+
+  const trigger = page.getByRole("button", { name: "SDLC Agents" });
+  const disclosure = page.locator("#desktop-agents-navigation");
+
+  await expect(trigger).toHaveAttribute("aria-current", "page");
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await trigger.focus();
+  await trigger.press("Enter");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(disclosure).toBeVisible();
+
+  for (const agent of agentNavigationLinks) {
+    await expect(
+      disclosure.getByRole("link", { name: agent.name, exact: true }),
+    ).toHaveAttribute("href", agent.href);
+  }
+  await expect(
+    disclosure.getByRole("link", { name: "View all agents" }),
+  ).toHaveAttribute("href", "/agents");
+  await expectNoHorizontalOverflow(page);
+
+  await disclosure.getByRole("link", { name: "Planning" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(disclosure).not.toBeVisible();
+  await expect(trigger).toBeFocused();
+
+  await trigger.press("Space");
+  await disclosure.getByRole("link", { name: "Planning" }).click();
+  await expect(page).toHaveURL(/\/agents\/planning$/);
+});
+
+test("mobile navigation expands the SDLC agent links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/agents/testing");
+
+  const navigationTrigger = page.getByRole("button", {
+    name: "Open navigation menu",
+  });
+  await navigationTrigger.click();
+
+  const mobileNavigation = page.locator("#mobile-navigation");
+  const agentTrigger = mobileNavigation.getByRole("button", {
+    name: "SDLC Agents",
+  });
+  const disclosure = page.locator("#mobile-agents-navigation");
+
+  await expect(agentTrigger).toHaveAttribute("aria-current", "page");
+  await expect(agentTrigger).toHaveAttribute("aria-expanded", "false");
+  await agentTrigger.press("Enter");
+  await expect(agentTrigger).toHaveAttribute("aria-expanded", "true");
+  await expect(disclosure).toBeVisible();
+
+  for (const agent of agentNavigationLinks) {
+    await expect(
+      disclosure.getByRole("link", { name: agent.name, exact: true }),
+    ).toHaveAttribute("href", agent.href);
+  }
+  await expect(
+    disclosure.getByRole("link", { name: "View all agents" }),
+  ).toHaveAttribute("href", "/agents");
+  await expectNoHorizontalOverflow(page);
+
+  await disclosure.getByRole("link", { name: "Testing" }).focus();
+  await page.keyboard.press("Escape");
+  await expect(mobileNavigation).not.toBeVisible();
+  await expect(navigationTrigger).toHaveAccessibleName("Open navigation menu");
+  await expect(navigationTrigger).toBeFocused();
+});
 
 test("admin dashboard remains a noindex static demonstration", async ({ page }) => {
   const response = await page.goto("/admin/dashboard");
