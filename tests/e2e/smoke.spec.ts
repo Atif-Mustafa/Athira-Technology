@@ -77,6 +77,48 @@ for (const path of publicHtmlRoutes) {
   });
 }
 
+test("the product hero explains coordination while the homepage keeps the seven-agent workflow", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/ai-software-engineer");
+
+  const productHero = page.locator("main > header");
+  const coordinationDiagram = productHero.getByTestId("coordination-diagram");
+  await expect(coordinationDiagram).toBeVisible();
+
+  for (const label of [
+    "Approved requirement",
+    "AI Software Engineer",
+    "Plan & Design",
+    "Build & Test",
+    "Release & Operate",
+    "Knowledge",
+    "Human review gate",
+    "Approved engineering artifacts",
+  ]) {
+    await expect(coordinationDiagram.getByText(label, { exact: true })).toBeVisible();
+  }
+
+  for (const agent of agentsData) {
+    await expect(
+      productHero.getByRole("link", { name: new RegExp(agent.name) }),
+    ).toHaveCount(0);
+  }
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectNoHorizontalOverflow(page);
+
+  await page.goto("/");
+  const homepageHero = page.locator("main > header");
+  await expect(homepageHero.getByText("Illustrative workflow")).toBeVisible();
+  for (const agent of agentsData) {
+    await expect(
+      homepageHero.getByRole("link", { name: new RegExp(agent.name) }),
+    ).toBeVisible();
+  }
+});
+
 test("desktop SDLC Agents disclosure supports keyboard navigation", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/agents/testing");

@@ -2,10 +2,10 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, CircleAlert } from "lucide-react";
 import { AgentIcon } from "../../../components/agents/AgentIcon";
 import { CallToAction } from "../../../components/marketing/CallToAction";
+import { CoordinationDiagram } from "../../../components/marketing/CoordinationDiagram";
 import { FaqList } from "../../../components/marketing/FaqList";
 import { PageHero } from "../../../components/marketing/PageHero";
 import { Container, Section, SectionHeading } from "../../../components/marketing/Section";
-import { WorkflowVisual } from "../../../components/marketing/WorkflowVisual";
 import { StructuredData } from "../../../components/seo/StructuredData";
 import { ButtonLink } from "../../../components/ui/Button";
 import { agentsData } from "../../../content/agents";
@@ -33,7 +33,7 @@ export default function AiSoftwareEngineerPage() {
         description={content.summary}
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "AI Software Engineer" }]}
         actions={<><ButtonLink href="/contact" size="lg">Plan a discovery <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" /></ButtonLink><ButtonLink href="/agents" variant="outline" size="lg">Meet the agents</ButtonLink></>}
-        aside={<WorkflowVisual />}
+        aside={<CoordinationDiagram />}
       />
 
       <Section aria-labelledby="users-heading">
