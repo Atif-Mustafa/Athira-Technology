@@ -50,6 +50,16 @@ test("open mobile agent navigation has no serious or critical axe violations", a
   await expectNoBlockingViolations(page);
 });
 
+test("open mobile admin navigation has no serious or critical axe violations", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/admin/dashboard");
+  await page.locator("summary").click();
+  await expect(
+    page.getByRole("navigation", { name: "Admin demo mobile navigation" }),
+  ).toBeVisible();
+  await expectNoBlockingViolations(page);
+});
+
 test("contact client-validation state has no serious or critical axe violations", async ({ page }) => {
   await page.goto("/contact");
   await page.getByRole("button", { name: "Send enquiry" }).click();

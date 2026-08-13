@@ -193,12 +193,87 @@ test("mobile navigation expands the SDLC agent links", async ({ page }) => {
 });
 
 test("admin dashboard remains a noindex static demonstration", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
   const response = await page.goto("/admin/dashboard");
 
   expect(response?.status()).toBe(200);
   await expect(page.locator("h1")).toHaveCount(1);
-  await expect(page.getByText(/Demo only: this page uses static placeholder data/)).toBeVisible();
+  await expect(page.getByRole("note", { name: "Admin demonstration limitation" })).toContainText(
+    "Admin UX demo — static sample data only",
+  );
+  await expect(page.getByText("Demo user")).toBeVisible();
+  await expect(page.getByText("No signed-in account")).toBeVisible();
+  const desktopNavigation = page.getByRole("navigation", { name: "Admin demo sidebar" });
+  await expect(desktopNavigation.getByRole("link", { name: /Overview/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.getByText("Planned module", { exact: true })).toHaveCount(4);
+  await expect(page.getByText("Illustrative analytics")).toBeVisible();
+  const systemStatus = page.getByRole("heading", { name: "System status concept" });
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "Admin backend" }),
+  ).toContainText("Not implemented");
+  await expect(
+    page.getByRole("listitem").filter({ hasText: "Contact API" }),
+  ).toContainText("Configured");
+  await expect(systemStatus).toBeVisible();
+  await expect(page.getByText(/No live telemetry connected/)).toBeVisible();
+  await expect(page.getByText(/sign out|last login|authenticated as/i)).toHaveCount(0);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await page.locator("summary").click();
+  const mobileNavigation = page.getByRole("navigation", {
+    name: "Admin demo mobile navigation",
+  });
+  await expect(mobileNavigation).toBeVisible();
+  await expect(mobileNavigation.getByRole("link", { name: /Overview/ })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expectNoHorizontalOverflow(page);
+});
+
+test("admin dashboard remains responsive across desktop, tablet, and mobile layouts", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await page.goto("/admin/dashboard");
+  const desktopNavigation = page.getByRole("navigation", { name: "Admin demo sidebar" });
+  await expect(desktopNavigation).toBeVisible();
+  await expect(desktopNavigation.getByText("Settings", { exact: true })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 768, height: 900 });
+  await page.reload();
+  await expect(page.locator("summary")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Admin demo sidebar" })).not.toBeVisible();
+  await page.locator("summary").click();
+  await expect(
+    page.getByRole("navigation", { name: "Admin demo mobile navigation" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Admin demo mobile navigation" })
+      .getByText("Settings", { exact: true }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+  await expect(page.locator("summary")).toBeVisible();
+  await page.locator("summary").click();
+  await expect(
+    page.getByRole("navigation", { name: "Admin demo mobile navigation" }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Admin demo mobile navigation" })
+      .getByText("Settings", { exact: true }),
+  ).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test("health endpoint returns an OK response", async ({ request }) => {
