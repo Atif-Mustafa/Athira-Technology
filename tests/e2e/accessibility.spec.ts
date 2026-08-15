@@ -20,7 +20,8 @@ const accessibilityRoutes = [
   { name: "contact demonstration", path: "/contact" },
   { name: "testing agent", path: "/agents/testing" },
   { name: "privacy draft", path: "/privacy" },
-  { name: "admin dashboard demonstration", path: "/admin/dashboard" },
+  { name: "admin login boundary", path: "/admin/login" },
+  { name: "admin forbidden state", path: "/admin/forbidden" },
 ] as const;
 
 for (const route of accessibilityRoutes) {

@@ -192,35 +192,23 @@ test("mobile navigation expands the SDLC agent links", async ({ page }) => {
   await expect(navigationTrigger).toBeFocused();
 });
 
-test("admin dashboard remains a noindex static demonstration", async ({ page }) => {
+test("admin login is a noindex authentication boundary", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  const response = await page.goto("/admin/dashboard");
+  const response = await page.goto("/admin/login");
 
   expect(response?.status()).toBe(200);
-  await expect(page.locator("h1")).toHaveCount(1);
-  await expect(page.getByRole("note", { name: "Admin demonstration limitation" })).toContainText(
-    "Admin UX demo — static sample data only",
-  );
-  await expect(page.getByText("Demo user")).toBeVisible();
-  await expect(page.getByText("No signed-in account")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in to continue" })).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeDisabled();
+  await expect(page.getByLabel("Password")).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeDisabled();
+  await expect(page.getByRole("alert").filter({ hasText: "Admin authentication is not configured" })).toBeVisible();
+  await expect(page.getByText(/public signup is intentionally disabled/i)).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   const desktopNavigation = page.getByRole("navigation", { name: "Admin demo sidebar" });
   await expect(desktopNavigation.getByRole("link", { name: /Overview/ })).toHaveAttribute(
-    "aria-current",
-    "page",
+    "href",
+    "/admin/dashboard",
   );
-  await expect(page.getByText("Planned module", { exact: true })).toHaveCount(4);
-  await expect(page.getByText("Illustrative analytics")).toBeVisible();
-  const systemStatus = page.getByRole("heading", { name: "System status concept" });
-  await expect(
-    page.getByRole("listitem").filter({ hasText: "Admin backend" }),
-  ).toContainText("Not implemented");
-  await expect(
-    page.getByRole("listitem").filter({ hasText: "Contact API" }),
-  ).toContainText("Configured");
-  await expect(systemStatus).toBeVisible();
-  await expect(page.getByText(/No live telemetry connected/)).toBeVisible();
-  await expect(page.getByText(/sign out|last login|authenticated as/i)).toHaveCount(0);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
@@ -229,18 +217,25 @@ test("admin dashboard remains a noindex static demonstration", async ({ page }) 
     name: "Admin demo mobile navigation",
   });
   await expect(mobileNavigation).toBeVisible();
-  await expect(mobileNavigation.getByRole("link", { name: /Overview/ })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
   await expectNoHorizontalOverflow(page);
 });
 
-test("admin dashboard remains responsive across desktop, tablet, and mobile layouts", async ({
+test("protected admin dashboard redirects when auth is not configured", async ({ page }) => {
+  const response = await page.goto("/admin/dashboard");
+
+  expect(response?.status()).toBe(200);
+  const redirectedUrl = new URL(page.url());
+  expect(redirectedUrl.pathname).toBe("/admin/login");
+  expect(redirectedUrl.searchParams.get("next")).toBe("/admin/dashboard");
+  expect(redirectedUrl.searchParams.get("error")).toBe("configuration");
+  await expect(page.getByRole("heading", { name: "Sign in to continue" })).toBeVisible();
+});
+
+test("admin authentication boundary remains responsive across desktop, tablet, and mobile layouts", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1366, height: 900 });
-  await page.goto("/admin/dashboard");
+  await page.goto("/admin/login");
   const desktopNavigation = page.getByRole("navigation", { name: "Admin demo sidebar" });
   await expect(desktopNavigation).toBeVisible();
   await expect(desktopNavigation.getByText("Settings", { exact: true })).toBeVisible();
@@ -275,7 +270,6 @@ test("admin dashboard remains responsive across desktop, tablet, and mobile layo
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
-
 test("health endpoint returns an OK response", async ({ request }) => {
   const response = await request.get("/api/health");
   expect(response.status()).toBe(200);

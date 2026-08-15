@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import { CircleAlert, CircleUserRound } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 import { AdminNavigation } from "../../components/admin/AdminNavigation";
 import { Badge } from "../../components/ui/Badge";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard Demo",
-  description: "Static demonstration dashboard for the Athira Technology prototype.",
-  robots: {
-    index: false,
-    follow: false,
-    nocache: true,
-  },
+  title: "Admin Dashboard",
+  description: "Authenticated Athira Technology admin workspace.",
+  robots: { index: false, follow: false, nocache: true },
 };
 
 export default function AdminLayout({
@@ -26,19 +22,19 @@ export default function AdminLayout({
             <p className="text-lg font-bold tracking-tight text-white">
               Athira<span className="text-blue-500">Tech</span>
             </p>
-            <p className="mt-1 text-xs text-slate-400">Admin UX concept</p>
+            <p className="mt-1 text-xs text-slate-400">Authenticated admin workspace</p>
           </div>
           <Badge variant="outline" className="text-blue-300">
-            Demo
+            Auth foundation
           </Badge>
         </div>
         <div className="mt-6 flex-1 overflow-y-auto">
           <AdminNavigation ariaLabel="Admin demo sidebar" />
         </div>
         <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-          <p className="text-xs font-semibold text-slate-300">Static presentation only</p>
+          <p className="text-xs font-semibold text-slate-300">Auth foundation only</p>
           <p className="mt-1 text-xs leading-5 text-slate-400">
-            Navigation previews planned modules and does not expose working admin actions.
+            Authentication and role-based access are connected. Planned modules do not expose working admin actions.
           </p>
         </div>
       </aside>
@@ -48,23 +44,14 @@ export default function AdminLayout({
           <div className="mx-auto flex max-w-[96rem] items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-white lg:text-base">
-                <span className="lg:hidden">AthiraTech Admin Demo</span>
+                <span className="lg:hidden">AthiraTech Admin</span>
                 <span className="hidden lg:inline">Admin workspace</span>
               </p>
-              <p className="hidden text-xs text-slate-400 sm:block">Overview presentation</p>
+              <p className="hidden text-xs text-slate-400 sm:block">Authentication and RBAC foundation</p>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Badge variant="outline" className="text-blue-300">
-                Preview
-              </Badge>
-              <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/50 px-2.5 py-2 sm:px-3">
-                <CircleUserRound aria-hidden="true" className="h-5 w-5 text-slate-400" />
-                <div>
-                  <p className="text-xs font-semibold text-slate-200">Demo user</p>
-                <p className="hidden text-[0.65rem] text-slate-400 sm:block">No signed-in account</p>
-                </div>
-              </div>
-            </div>
+            <Badge variant="outline" className="text-blue-300">
+              Protected area
+            </Badge>
           </div>
         </header>
 
@@ -87,14 +74,14 @@ export default function AdminLayout({
         >
           <div
             role="note"
-            aria-label="Admin demonstration limitation"
+            aria-label="Admin authentication boundary"
             className="mb-6 flex gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-amber-100"
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
             <div>
-              <p className="text-sm font-semibold">Admin UX demo — static sample data only.</p>
+              <p className="text-sm font-semibold">Authenticated admin workspace — static modules remain illustrative.</p>
               <p className="mt-1 text-sm leading-6 text-amber-100/80">
-                Authentication, persistence, user/content management, and analytics backends are not implemented.
+                Authentication and role-based access are connected. CMS, user-management, persistence, and analytics backends are not implemented.
               </p>
             </div>
           </div>

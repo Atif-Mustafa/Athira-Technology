@@ -15,6 +15,9 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/Card";
+import { requireAuthenticatedUser } from "../../../server/auth/guards";
+import { signOutAction } from "../actions";
+import { roleLabel } from "../../../server/auth/roles";
 
 const overviewCards = [
   {
@@ -32,7 +35,7 @@ const overviewCards = [
   {
     label: "Content drafts",
     value: "3 sample items",
-    detail: "Static demo content",
+    detail: "Illustrative module scope content",
     icon: FileText,
   },
   {
@@ -109,7 +112,10 @@ const systemStatuses = [
   { label: "Analytics backend", value: "Not implemented", state: "Planned" },
 ] as const;
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const auth = await requireAuthenticatedUser();
+  const displayName = auth.profile?.display_name?.trim() || auth.user?.email || "Authenticated user";
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -121,12 +127,23 @@ export default function AdminDashboardPage() {
             Admin UX concept
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 sm:text-base">
-            An illustrative back-office information architecture for the planned product. Nothing on this page reads from or writes to a live admin system.
+            An authenticated, illustrative back-office information architecture for the planned product. Authentication and role-based access are implemented; content, user-management, and analytics modules remain planned.
           </p>
         </div>
-        <Badge variant="outline" className="w-fit text-blue-300">
-          Static demo
-        </Badge>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-xs text-slate-300">
+            Signed in as <span className="font-semibold text-white">{displayName}</span> · {roleLabel(auth.role)} role
+          </div>
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-300 transition hover:border-blue-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
+
       </div>
 
       <section aria-labelledby="overview-kpi-heading">

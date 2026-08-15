@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { validateSupabasePublicEnvironment, type SupabasePublicEnvironmentResult } from "../lib/supabase/config";
+
+export { validateSupabasePublicEnvironment } from "../lib/supabase/config";
+export type { SupabasePublicConfig, SupabasePublicEnvironmentResult } from "../lib/supabase/config";
 
 export type RuntimeMode = "development" | "test" | "production";
 
@@ -175,4 +179,9 @@ export function validateServerEnvironment(
 
 export function getContactServerConfig(): EnvironmentValidationResult {
   return validateServerEnvironment(process.env);
+}
+
+
+export function getSupabaseServerConfig(): SupabasePublicEnvironmentResult {
+  return validateSupabasePublicEnvironment(process.env);
 }

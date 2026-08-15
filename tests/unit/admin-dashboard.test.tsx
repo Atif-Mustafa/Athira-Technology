@@ -1,23 +1,33 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import AdminDashboardPage from "@/app/admin/dashboard/page";
 import AdminLayout from "@/app/admin/layout";
 import { AdminNavigation } from "@/components/admin/AdminNavigation";
 
-describe("static admin UX concept", () => {
-  it("keeps the shell and navigation explicitly non-production", () => {
+vi.mock("@/server/auth/guards", () => ({
+  requireAuthenticatedUser: vi.fn().mockResolvedValue({
+    configurationAvailable: true,
+    user: { id: "user-1", email: "ada@example.com" },
+    profile: { display_name: "Ada", status: "active" },
+    role: "viewer",
+    issue: null,
+  }),
+}));
+
+describe("authenticated admin UX concept", () => {
+  it("keeps the shell honest about its auth foundation and planned scope", () => {
     render(
       <AdminLayout>
         <div>Dashboard content</div>
       </AdminLayout>,
     );
 
-    expect(screen.getByRole("note", { name: "Admin demonstration limitation" })).toHaveTextContent(
-      "Admin UX demo — static sample data only",
+    expect(screen.getByRole("note", { name: "Admin authentication boundary" })).toHaveTextContent(
+      "Authentication and role-based access are connected",
     );
-    expect(screen.getByText("Demo user")).toBeInTheDocument();
-    expect(screen.getByText("No signed-in account")).toBeInTheDocument();
-    expect(screen.queryByText(/sign out|last login|account settings/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Auth foundation only")).toBeInTheDocument();
+    expect(screen.queryByText("Demo user")).not.toBeInTheDocument();
+    expect(screen.queryByText("No signed-in account")).not.toBeInTheDocument();
   });
 
   it("marks Overview active and the remaining navigation as planned", () => {
@@ -35,9 +45,11 @@ describe("static admin UX concept", () => {
     expect(within(navigation).getAllByText("Planned")).toHaveLength(8);
   });
 
-  it("labels sample data, planned modules, and implementation boundaries honestly", () => {
-    render(<AdminDashboardPage />);
+  it("renders sample data only after the authenticated guard allows access", async () => {
+    render(await AdminDashboardPage());
 
+    expect(screen.getByText("Ada").closest("div")).toHaveTextContent("Signed in as Ada · Viewer role");
+    expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.getByText("No live telemetry connected")).toBeInTheDocument();
     expect(screen.getByText("No operational metrics")).toBeInTheDocument();
     expect(screen.getAllByText("Planned module")).toHaveLength(4);
