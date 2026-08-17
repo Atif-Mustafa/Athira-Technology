@@ -1,41 +1,60 @@
 import Link from "next/link";
-import { agentsData } from "../../../data/agents";
-import { IconRenderer } from "../../../components/IconRenderer";
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/Card";
-import type { Metadata } from "next";
+import { ArrowRight } from "lucide-react";
+import { AgentIcon } from "../../../components/agents/AgentIcon";
+import { CallToAction } from "../../../components/marketing/CallToAction";
+import { PageHero } from "../../../components/marketing/PageHero";
+import { Container, Section, SectionHeading } from "../../../components/marketing/Section";
+import { StructuredData } from "../../../components/seo/StructuredData";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/Card";
+import { agentsData } from "../../../content/agents";
+import { breadcrumbStructuredData, createMetadata } from "../../../lib/seo";
 
-export const metadata: Metadata = {
-  title: "The SDLC Agent Swarm | Athira Technology",
-  description: "Seven specialized agents working in harmony to deliver production-ready software faster than ever before.",
-};
+export const metadata = createMetadata({
+  title: "SDLC Agents",
+  description: "Explore seven specialized, human-reviewed agent concepts spanning planning, design, development, testing, deployment, monitoring, and documentation.",
+  path: "/agents",
+});
 
-export default function AgentsOverview() {
+export default function AgentsOverviewPage() {
   return (
-    <div className="pt-24 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center max-w-3xl mx-auto mb-20">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">The SDLC Agent Swarm</h1>
-        <p className="text-slate-400 text-lg">
-          Seven specialized agents working in harmony to deliver production-ready software faster than ever before.
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {agentsData.map((agent) => (
-          <Link key={agent.id} href={`/agents/${agent.slug}`} className="group">
-            <Card className="h-full border-slate-800 hover:border-blue-500/50 transition-colors">
-              <CardHeader>
-                <div className="text-blue-500 mb-2 bg-slate-900 border border-slate-800 w-16 h-16 flex items-center justify-center rounded-xl group-hover:bg-blue-500/10 group-hover:text-blue-400 group-hover:border-blue-500/30 transition-colors">
-                  <IconRenderer icon={agent.icon} className="w-8 h-8" />
-                </div>
-                <CardTitle className="mt-4">{agent.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-400 text-sm leading-relaxed">{agent.shortDescription}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
+    <>
+      <StructuredData data={breadcrumbStructuredData([{ name: "Home", path: "/" }, { name: "SDLC Agents", path: "/agents" }])} />
+      <PageHero
+        eyebrow="Seven specialist roles"
+        title="A coordinated agent model for the complete SDLC"
+        description="Each planned Athira agent has a bounded responsibility, explicit artifacts, and human review points. Together they form the lifecycle model behind the AI Software Engineer."
+        breadcrumbs={[{ label: "Home", href: "/" }, { label: "SDLC Agents" }]}
+      />
+      <Section aria-labelledby="agents-heading">
+        <Container>
+          <SectionHeading id="agents-heading" eyebrow="Lifecycle map" title="Explore every agent responsibility" description="The descriptions below present intended workflows. They do not claim that production agents or tool integrations are running in this repository." />
+          <ol className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {agentsData.map((agent, index) => (
+              <li key={agent.id}>
+                <Link href={`/agents/${agent.slug}`} className="group block h-full rounded-2xl">
+                  <Card className="h-full transition-colors group-hover:border-blue-500/50">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-blue-400">
+                          <AgentIcon icon={agent.icon} className="h-7 w-7" />
+                        </span>
+                        <span className="text-sm font-semibold text-slate-400">0{index + 1}</span>
+                      </div>
+                      <CardTitle as="h3" className="pt-5 group-hover:text-blue-300">{agent.name}</CardTitle>
+                      <p className="text-sm font-medium text-blue-400">{agent.label}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="leading-7">{agent.shortDescription}</p>
+                      <span className="mt-5 inline-flex items-center text-sm font-semibold text-slate-200">Explore responsibility <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" /></span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </Section>
+      <CallToAction title="Choose one handoff worth improving" description="A useful pilot starts with a bounded responsibility, named reviewers, and clear evidence—not an autonomous transformation claim." primaryLabel="Discuss an agent workflow" />
+    </>
   );
 }

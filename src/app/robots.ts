@@ -1,7 +1,15 @@
 import { MetadataRoute } from "next";
+import { absoluteUrl } from "../config/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://athiratech.example.com";
+  if (process.env.VERCEL_ENV === "preview") {
+    return {
+      rules: {
+        userAgent: "*",
+        disallow: "/",
+      },
+    };
+  }
 
   return {
     rules: {
@@ -9,6 +17,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin/", "/api/"],
     },
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: absoluteUrl("/sitemap.xml"),
   };
 }
