@@ -17,6 +17,14 @@ export type AuthContext = {
   issue: "configuration" | "unauthenticated" | "role_lookup_failed" | "disabled" | null;
 };
 
+export type AdminAuthContext = AuthContext & {
+  configurationAvailable: true;
+  user: User;
+  profile: UserProfile & { status: "active" };
+  role: "admin";
+  issue: null;
+};
+
 export type AdminAccessDecision = "configuration" | "unauthenticated" | "forbidden" | "allowed";
 
 export async function getAuthContext(): Promise<AuthContext> {
@@ -74,6 +82,16 @@ export async function getAuthContext(): Promise<AuthContext> {
       };
     }
 
+    if (!typedProfile || typedProfile.status !== "active") {
+      return {
+        configurationAvailable: true,
+        user: data.user,
+        profile: typedProfile,
+        role: null,
+        issue: "role_lookup_failed",
+      };
+    }
+
     return {
       configurationAvailable: true,
       user: data.user,
@@ -124,7 +142,7 @@ export function requireAuthenticatedUser(returnTo = "/admin/dashboard") {
 }
 
 export function requireAdminRole(returnTo = "/admin/dashboard") {
-  return requireAnyRole(["admin"], returnTo);
+  return requireAnyRole(["admin"], returnTo) as Promise<AdminAuthContext>;
 }
 
 export function requireEditorOrAdmin(returnTo = "/admin/dashboard") {

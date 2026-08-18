@@ -185,3 +185,51 @@ export function getContactServerConfig(): EnvironmentValidationResult {
 export function getSupabaseServerConfig(): SupabasePublicEnvironmentResult {
   return validateSupabasePublicEnvironment(process.env);
 }
+
+export type SupabaseAdminEnvironment = {
+  NEXT_PUBLIC_SUPABASE_URL?: string;
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
+  SUPABASE_SECRET_KEY?: string;
+  NODE_ENV?: string;
+};
+
+export type SupabaseAdminConfig = {
+  url: string;
+  secretKey: string;
+};
+
+export type SupabaseAdminEnvironmentResult =
+  | { success: true; config: SupabaseAdminConfig }
+  | { success: false; issues: string[] };
+
+export function validateSupabaseAdminEnvironment(
+  environment: SupabaseAdminEnvironment,
+): SupabaseAdminEnvironmentResult {
+  const publicConfiguration = validateSupabasePublicEnvironment(environment);
+  const secretKey = environment.SUPABASE_SECRET_KEY?.trim() ?? "";
+
+  if (!publicConfiguration.success) {
+    return { success: false, issues: [...publicConfiguration.issues] };
+  }
+
+  if (!secretKey) {
+    return {
+      success: false,
+      issues: ["SUPABASE_SECRET_KEY is required for admin user management."],
+    };
+  }
+
+  return {
+    success: true,
+    config: {
+      url: publicConfiguration.config.url,
+      secretKey,
+    },
+  };
+}
+
+export function getSupabaseAdminConfig(
+  environment: SupabaseAdminEnvironment = process.env,
+): SupabaseAdminEnvironmentResult {
+  return validateSupabaseAdminEnvironment(environment);
+}

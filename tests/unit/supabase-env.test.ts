@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateSupabasePublicEnvironment } from "@/server/env";
+import { validateSupabaseAdminEnvironment, validateSupabasePublicEnvironment } from "@/server/env";
 
 describe("Supabase environment validation", () => {
   it("accepts a valid local configuration", () => {
@@ -45,5 +45,29 @@ describe("Supabase environment validation", () => {
         "NEXT_PUBLIC_SUPABASE_URL must be a Supabase project origin without credentials or a path.",
       );
     }
+  });
+});
+
+describe("Supabase admin environment validation", () => {
+  it("requires the server-only secret without exposing its value", () => {
+    const result = validateSupabaseAdminEnvironment({
+      NODE_ENV: "production",
+      NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_example",
+      SUPABASE_SECRET_KEY: "",
+    });
+    expect(result).toEqual({ success: false, issues: ["SUPABASE_SECRET_KEY is required for admin user management."] });
+  });
+
+  it("returns the public origin and server-only secret separately", () => {
+    expect(validateSupabaseAdminEnvironment({
+      NODE_ENV: "production",
+      NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_example",
+      SUPABASE_SECRET_KEY: "sb_secret_example",
+    })).toEqual({
+      success: true,
+      config: { url: "https://project.supabase.co", secretKey: "sb_secret_example" },
+    });
   });
 });

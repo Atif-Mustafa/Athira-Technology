@@ -22,12 +22,15 @@ const accessibilityRoutes = [
   { name: "privacy draft", path: "/privacy" },
   { name: "admin login boundary", path: "/admin/login" },
   { name: "admin forbidden state", path: "/admin/forbidden" },
+  { name: "admin user-management boundary", path: "/admin/users" },
+  { name: "admin user detail boundary", path: "/admin/users/11111111-1111-4111-8111-111111111111" },
 ] as const;
 
 for (const route of accessibilityRoutes) {
   test(`${route.name} has no serious or critical axe violations`, async ({ page }) => {
     const response = await page.goto(route.path);
     expect(response?.status()).toBe(200);
+    if (route.path.startsWith("/admin/users")) await expect(page).toHaveURL(/\/admin\/login/);
 
     await expectNoBlockingViolations(page);
   });

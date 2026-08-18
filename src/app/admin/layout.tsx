@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CircleAlert } from "lucide-react";
 import { AdminNavigation } from "../../components/admin/AdminNavigation";
 import { Badge } from "../../components/ui/Badge";
+import { getAuthContext } from "../../server/auth/guards";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -9,11 +10,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const auth = await getAuthContext();
+  const canManageUsers = auth.role === "admin" && auth.profile?.status === "active";
+
   return (
     <div className="min-h-screen bg-slate-950 font-sans text-slate-200 selection:bg-blue-500 selection:text-white lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-slate-800 bg-slate-950/95 p-5 lg:flex">
@@ -29,12 +33,12 @@ export default function AdminLayout({
           </Badge>
         </div>
         <div className="mt-6 flex-1 overflow-y-auto">
-          <AdminNavigation ariaLabel="Admin demo sidebar" />
+          <AdminNavigation ariaLabel="Admin demo sidebar" canManageUsers={canManageUsers} />
         </div>
         <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/40 p-3">
-          <p className="text-xs font-semibold text-slate-300">Auth foundation only</p>
+          <p className="text-xs font-semibold text-slate-300">Secure admin workspace</p>
           <p className="mt-1 text-xs leading-5 text-slate-400">
-            Authentication and role-based access are connected. Planned modules do not expose working admin actions.
+            Authentication and role-based access are connected. User management is implemented; other modules remain illustrative.
           </p>
         </div>
       </aside>
@@ -47,7 +51,7 @@ export default function AdminLayout({
                 <span className="lg:hidden">AthiraTech Admin</span>
                 <span className="hidden lg:inline">Admin workspace</span>
               </p>
-              <p className="hidden text-xs text-slate-400 sm:block">Authentication and RBAC foundation</p>
+              <p className="hidden text-xs text-slate-400 sm:block">Secure role-aware workspace</p>
             </div>
             <Badge variant="outline" className="text-blue-300">
               Protected area
@@ -62,7 +66,7 @@ export default function AdminLayout({
               <span className="ml-2 text-xs font-normal text-slate-400">Static sections</span>
             </summary>
             <div className="mt-4 border-t border-slate-800 pt-4">
-              <AdminNavigation ariaLabel="Admin demo mobile navigation" compact />
+              <AdminNavigation ariaLabel="Admin demo mobile navigation" compact canManageUsers={canManageUsers} />
             </div>
           </details>
         </div>
@@ -81,7 +85,7 @@ export default function AdminLayout({
             <div>
               <p className="text-sm font-semibold">Authenticated admin workspace — static modules remain illustrative.</p>
               <p className="mt-1 text-sm leading-6 text-amber-100/80">
-                Authentication and role-based access are connected. CMS, user-management, persistence, and analytics backends are not implemented.
+                Authentication and user management are implemented. CMS and analytics backends remain not implemented.
               </p>
             </div>
           </div>

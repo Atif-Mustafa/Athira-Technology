@@ -82,11 +82,6 @@ const analyticsStages = [
 
 const plannedModules = [
   {
-    name: "User Management",
-    description: "Roles, access groups, and invitation concepts.",
-    items: ["Roles", "Access groups", "Invitations"],
-  },
-  {
     name: "Content Management",
     description: "Editorial structure for future managed content.",
     items: ["Pages", "Blog posts", "Media"],
@@ -107,7 +102,7 @@ const systemStatuses = [
   { label: "Public site", value: "Preview", state: "Environment" },
   { label: "Contact API", value: "Configured", state: "Implemented" },
   { label: "Rate limiting", value: "Configured", state: "Implemented" },
-  { label: "Admin backend", value: "Not implemented", state: "Planned" },
+  { label: "User management", value: "Implemented", state: "Implemented" },
   { label: "CMS", value: "Not implemented", state: "Planned" },
   { label: "Analytics backend", value: "Not implemented", state: "Planned" },
 ] as const;
@@ -127,7 +122,7 @@ export default async function AdminDashboardPage() {
             Admin UX concept
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 sm:text-base">
-            An authenticated, illustrative back-office information architecture for the planned product. Authentication and role-based access are implemented; content, user-management, and analytics modules remain planned.
+            An authenticated, illustrative back-office information architecture for the planned product. Authentication, role-based access, and user management are implemented; content and analytics modules remain planned.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -250,6 +245,39 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <section aria-labelledby="implemented-modules-heading">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-400">
+            Implemented capability
+          </p>
+          <h2 id="implemented-modules-heading" className="mt-2 text-2xl font-bold text-white">
+            User management
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Invitations, role changes, reversible access disablement, and audit events are available to active administrators.
+          </p>
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <Badge variant="success" className="mb-2 w-fit">Implemented module</Badge>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription className="leading-6">Secure workspace access controls with server-side authorization.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {["Invitations", "Roles", "Enable / disable"].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-sm text-slate-400">
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       <section aria-labelledby="planned-modules-heading">
         <div>

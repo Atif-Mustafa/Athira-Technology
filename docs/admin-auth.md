@@ -9,7 +9,7 @@ This milestone connects the existing Admin UX concept to Supabase Auth and a sma
 - `proxy.ts` refreshes Supabase sessions for `/admin/**` requests using the Next.js 16 Proxy convention.
 - `src/server/auth/guards.ts` performs fresh server-side identity and role lookups before dashboard rendering.
 - The dashboard allows `admin`, `editor`, and `viewer` roles to read the current baseline concept. Future mutations will require narrower role guards.
-- No privileged service-role client is used in this milestone. Ordinary authenticated reads use the user session and RLS.
+- User-management administration uses a separate server-only Supabase client only after requireAdminRole verifies the current session. Ordinary authenticated reads continue to use the user session and RLS.
 
 The implementation deliberately does not add a Custom Access Token Hook yet. Role claims would require an additional Supabase Dashboard hook deployment and claim-refresh lifecycle. Fresh server-side role lookup is easier to verify during this foundation milestone, while the database helper and RLS model leave a clean path to trusted JWT claims later.
 
@@ -22,7 +22,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-They are public browser configuration, not credentials. Do not commit real values. No server-only Supabase secret is required yet. If a future trusted bootstrap or administrative operation requires a service-role key, it must remain server-only, use a non-`NEXT_PUBLIC_` name, and never enter client props, responses, logs, or source maps.
+They are public browser configuration, not credentials. Do not commit real values. Admin user management requires SUPABASE_SECRET_KEY on the server only. If a future trusted bootstrap or administrative operation requires a service-role key, it must remain server-only, use a non-`NEXT_PUBLIC_` name, and never enter client props, responses, logs, or source maps.
 
 Marketing pages do not require Supabase configuration. `/admin/login` shows a safe configuration-unavailable state when the variables are absent, and protected routes redirect to that boundary rather than rendering dashboard content.
 
@@ -74,7 +74,7 @@ Replace the placeholder UUID only in the owner-controlled SQL editor. Never put 
 
 ## Known limitations
 
-- No public signup, invitation, password reset, or user-management UI exists.
+- Public signup remains disabled. Functional invitation and user-management controls are documented in docs/admin-user-management.md.
 - No CMS, contact-enquiry management, analytics backend, billing, or AI execution exists.
 - Role assignment is an owner-controlled SQL/bootstrap operation until a later secured admin mutation milestone.
 - Authenticated integration tests in this repository use deterministic local mocks and pure decision tests; they do not claim a live Supabase project has been verified.

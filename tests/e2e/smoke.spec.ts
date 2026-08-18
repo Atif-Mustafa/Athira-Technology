@@ -308,3 +308,15 @@ test("an unknown path returns the custom 404 page", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Return Home" })).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
+
+test("user-management routes remain behind the admin authorization boundary", async ({ page }) => {
+  for (const path of ["/admin/users", "/admin/users/11111111-1111-4111-8111-111111111111"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/admin\/login/);
+    const redirectedUrl = new URL(page.url());
+    expect(redirectedUrl.pathname).toBe("/admin/login");
+    expect(redirectedUrl.searchParams.get("next")).toBe(path);
+    expect(redirectedUrl.searchParams.get("error")).toBe("configuration");
+    await expect(page.getByRole("heading", { name: "Sign in to continue" })).toBeVisible();
+  }
+});

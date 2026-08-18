@@ -12,20 +12,25 @@ vi.mock("@/server/auth/guards", () => ({
     role: "viewer",
     issue: null,
   }),
+  getAuthContext: vi.fn().mockResolvedValue({
+    configurationAvailable: true,
+    user: { id: "user-1", email: "ada@example.com" },
+    profile: { display_name: "Ada", status: "active" },
+    role: "viewer",
+    issue: null,
+  }),
 }));
 
 describe("authenticated admin UX concept", () => {
-  it("keeps the shell honest about its auth foundation and planned scope", () => {
-    render(
-      <AdminLayout>
-        <div>Dashboard content</div>
-      </AdminLayout>,
-    );
+  it("keeps the shell honest about its auth foundation and planned scope", async () => {
+    render(await AdminLayout({
+      children: <div>Dashboard content</div>,
+    }));
 
     expect(screen.getByRole("note", { name: "Admin authentication boundary" })).toHaveTextContent(
-      "Authentication and role-based access are connected",
+      "Authentication and user management are implemented",
     );
-    expect(screen.getByText("Auth foundation only")).toBeInTheDocument();
+    expect(screen.getByText("Auth foundation")).toBeInTheDocument();
     expect(screen.queryByText("Demo user")).not.toBeInTheDocument();
     expect(screen.queryByText("No signed-in account")).not.toBeInTheDocument();
   });
@@ -52,9 +57,10 @@ describe("authenticated admin UX concept", () => {
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.getByText("No live telemetry connected")).toBeInTheDocument();
     expect(screen.getByText("No operational metrics")).toBeInTheDocument();
-    expect(screen.getAllByText("Planned module")).toHaveLength(4);
+    expect(screen.getAllByText("Planned module")).toHaveLength(3);
+    expect(screen.getByText("Implemented module")).toBeInTheDocument();
     expect(screen.getByText("Illustrative analytics")).toBeInTheDocument();
-    expect(screen.getByText("Admin backend").closest("li")).toHaveTextContent("Not implemented");
+    expect(screen.getAllByText("User management").length).toBeGreaterThan(0);
     expect(screen.getByText("CMS").closest("li")).toHaveTextContent("Not implemented");
     expect(screen.getByText("Analytics backend").closest("li")).toHaveTextContent("Not implemented");
     expect(screen.getByText("Contact API").closest("li")).toHaveTextContent("Configured");
