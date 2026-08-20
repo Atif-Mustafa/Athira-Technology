@@ -79,7 +79,7 @@ describe("SEO helpers", () => {
       item: "https://preview.athira.test/blog",
     });
     expect(article).toMatchObject({
-      "@type": "Article",
+      "@type": "BlogPosting",
       headline: blogArticles[0].title,
       mainEntityOfPage: `https://preview.athira.test/blog/${blogArticles[0].slug}`,
     });

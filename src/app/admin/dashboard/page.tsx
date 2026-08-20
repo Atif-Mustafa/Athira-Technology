@@ -33,9 +33,9 @@ const overviewCards = [
     icon: ClipboardCheck,
   },
   {
-    label: "Content drafts",
-    value: "3 sample items",
-    detail: "Illustrative module scope content",
+    label: "Content management",
+    value: "Database-backed",
+    detail: "Real counts are available in the CMS overview",
     icon: FileText,
   },
   {
@@ -82,19 +82,9 @@ const analyticsStages = [
 
 const plannedModules = [
   {
-    name: "Content Management",
-    description: "Editorial structure for future managed content.",
-    items: ["Pages", "Blog posts", "Media"],
-  },
-  {
     name: "Analytics",
     description: "Potential reporting surfaces without a connected backend.",
     items: ["Traffic", "Form enquiries", "Workflow activity"],
-  },
-  {
-    name: "SEO",
-    description: "Planned controls for search presentation and discovery.",
-    items: ["Metadata", "Sitemap", "Search previews"],
   },
 ] as const;
 
@@ -103,7 +93,7 @@ const systemStatuses = [
   { label: "Contact API", value: "Configured", state: "Implemented" },
   { label: "Rate limiting", value: "Configured", state: "Implemented" },
   { label: "User management", value: "Implemented", state: "Implemented" },
-  { label: "CMS", value: "Not implemented", state: "Planned" },
+  { label: "CMS", value: "Implemented", state: "Runtime acceptance pending" },
   { label: "Analytics backend", value: "Not implemented", state: "Planned" },
 ] as const;
 
@@ -122,7 +112,7 @@ export default async function AdminDashboardPage() {
             Admin UX concept
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 sm:text-base">
-            An authenticated, illustrative back-office information architecture for the planned product. Authentication, role-based access, and user management are implemented; content and analytics modules remain planned.
+            An authenticated back-office workspace. Authentication, role-based access, user management, and content workflows are implemented; analytics remains planned.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">

@@ -320,3 +320,32 @@ test("user-management routes remain behind the admin authorization boundary", as
     await expect(page.getByRole("heading", { name: "Sign in to continue" })).toBeVisible();
   }
 });
+test("CMS routes remain behind the authenticated role boundary", async ({ page }) => {
+  const protectedRoutes = [
+    "/admin/content",
+    "/admin/content/pages",
+    "/admin/content/pages/new",
+    "/admin/blog",
+    "/admin/blog/new",
+    "/admin/services",
+    "/admin/services/new",
+    "/admin/pricing",
+    "/admin/pricing/new",
+  ];
+  for (const path of protectedRoutes) {
+    await page.goto(path);
+    const redirectedUrl = new URL(page.url());
+    expect(redirectedUrl.pathname).toBe("/admin/login");
+    expect(redirectedUrl.searchParams.get("next")).toBe(path);
+    expect(redirectedUrl.searchParams.get("error")).toBe("configuration");
+  }
+});
+
+test("an unpublished or unknown blog slug is not public or listed in the sitemap", async ({ page, request }) => {
+  const response = await page.goto("/blog/private-draft-acceptance-test");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { name: "Page Not Found" })).toBeVisible();
+
+  const sitemap = await request.get("/sitemap.xml");
+  expect(await sitemap.text()).not.toContain("private-draft-acceptance-test");
+});

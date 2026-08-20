@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { absoluteUrl, siteConfig } from "../config/site";
 import type { BlogArticle } from "../content/blog";
 import type { FaqItem } from "../content/shared";
+import type { CmsPost } from "../server/cms/types";
 
 type MetadataInput = {
   title: string;
@@ -94,18 +95,22 @@ export function breadcrumbStructuredData(
   };
 }
 
-export function articleStructuredData(article: BlogArticle) {
+export function articleStructuredData(article: BlogArticle | CmsPost) {
+  const cmsArticle = "authorName" in article;
+  const description = cmsArticle ? article.seoDescription ?? article.excerpt : article.description;
+  const author = cmsArticle ? article.authorName : article.author;
+  const publishedAt = cmsArticle ? article.publishedAt ?? article.createdAt : article.publishedAt;
   return {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": "BlogPosting",
     headline: article.title,
-    description: article.description,
-    datePublished: article.publishedAt,
+    description,
+    datePublished: publishedAt,
     dateModified: article.updatedAt,
     mainEntityOfPage: absoluteUrl(`/blog/${article.slug}`),
     author: {
       "@type": "Organization",
-      name: article.author,
+      name: author,
     },
     publisher: {
       "@type": "Organization",

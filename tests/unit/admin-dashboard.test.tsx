@@ -22,20 +22,20 @@ vi.mock("@/server/auth/guards", () => ({
 }));
 
 describe("authenticated admin UX concept", () => {
-  it("keeps the shell honest about its auth foundation and planned scope", async () => {
+  it("keeps the shell honest about its implemented and pending scope", async () => {
     render(await AdminLayout({
       children: <div>Dashboard content</div>,
     }));
 
     expect(screen.getByRole("note", { name: "Admin authentication boundary" })).toHaveTextContent(
-      "Authentication and user management are implemented",
+      "User management and CMS workflows are implemented",
     );
-    expect(screen.getByText("Auth foundation")).toBeInTheDocument();
+    expect(screen.getByText("CMS workspace")).toBeInTheDocument();
     expect(screen.queryByText("Demo user")).not.toBeInTheDocument();
     expect(screen.queryByText("No signed-in account")).not.toBeInTheDocument();
   });
 
-  it("marks Overview active and the remaining navigation as planned", () => {
+  it("marks Overview, Content, and Blog as active modules", () => {
     render(<AdminNavigation ariaLabel="Test admin navigation" />);
 
     const navigation = screen.getByRole("navigation", { name: "Test admin navigation" });
@@ -47,7 +47,9 @@ describe("authenticated admin UX concept", () => {
       "href",
       "/admin/dashboard",
     );
-    expect(within(navigation).getAllByText("Planned")).toHaveLength(8);
+    expect(within(navigation).getByRole("link", { name: /Content/ })).toHaveAttribute("href", "/admin/content");
+    expect(within(navigation).getByRole("link", { name: /Blog/ })).toHaveAttribute("href", "/admin/blog");
+    expect(within(navigation).getAllByText("Planned")).toHaveLength(6);
   });
 
   it("renders sample data only after the authenticated guard allows access", async () => {
@@ -57,11 +59,11 @@ describe("authenticated admin UX concept", () => {
     expect(screen.getByRole("button", { name: "Sign out" })).toBeInTheDocument();
     expect(screen.getByText("No live telemetry connected")).toBeInTheDocument();
     expect(screen.getByText("No operational metrics")).toBeInTheDocument();
-    expect(screen.getAllByText("Planned module")).toHaveLength(3);
+    expect(screen.getAllByText("Planned module")).toHaveLength(1);
     expect(screen.getByText("Implemented module")).toBeInTheDocument();
     expect(screen.getByText("Illustrative analytics")).toBeInTheDocument();
     expect(screen.getAllByText("User management").length).toBeGreaterThan(0);
-    expect(screen.getByText("CMS").closest("li")).toHaveTextContent("Not implemented");
+    expect(screen.getByText("CMS").closest("li")).toHaveTextContent("Implemented");
     expect(screen.getByText("Analytics backend").closest("li")).toHaveTextContent("Not implemented");
     expect(screen.getByText("Contact API").closest("li")).toHaveTextContent("Configured");
     expect(screen.getByText("Rate limiting").closest("li")).toHaveTextContent("Configured");

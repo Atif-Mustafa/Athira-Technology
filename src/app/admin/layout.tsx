@@ -29,7 +29,7 @@ export default async function AdminLayout({
             <p className="mt-1 text-xs text-slate-400">Authenticated admin workspace</p>
           </div>
           <Badge variant="outline" className="text-blue-300">
-            Auth foundation
+            CMS workspace
           </Badge>
         </div>
         <div className="mt-6 flex-1 overflow-y-auto">
@@ -38,7 +38,7 @@ export default async function AdminLayout({
         <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/40 p-3">
           <p className="text-xs font-semibold text-slate-300">Secure admin workspace</p>
           <p className="mt-1 text-xs leading-5 text-slate-400">
-            Authentication and role-based access are connected. User management is implemented; other modules remain illustrative.
+            Authentication, user management, and database-backed content workflows are connected. Analytics remains illustrative.
           </p>
         </div>
       </aside>
@@ -63,7 +63,7 @@ export default async function AdminLayout({
           <details className="group mx-auto max-w-[96rem] rounded-xl border border-slate-800 bg-slate-900/35 p-3">
             <summary className="cursor-pointer text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
               Admin navigation
-              <span className="ml-2 text-xs font-normal text-slate-400">Static sections</span>
+              <span className="ml-2 text-xs font-normal text-slate-400">Role-aware modules</span>
             </summary>
             <div className="mt-4 border-t border-slate-800 pt-4">
               <AdminNavigation ariaLabel="Admin demo mobile navigation" compact canManageUsers={canManageUsers} />
@@ -83,9 +83,9 @@ export default async function AdminLayout({
           >
             <CircleAlert aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
             <div>
-              <p className="text-sm font-semibold">Authenticated admin workspace — static modules remain illustrative.</p>
+              <p className="text-sm font-semibold">Authenticated, role-aware administration workspace.</p>
               <p className="mt-1 text-sm leading-6 text-amber-100/80">
-                Authentication and user management are implemented. CMS and analytics backends remain not implemented.
+                User management and CMS workflows are implemented. Runtime Preview Supabase acceptance is still required; analytics remains out of scope.
               </p>
             </div>
           </div>

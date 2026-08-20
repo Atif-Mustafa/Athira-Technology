@@ -5,7 +5,7 @@ import { PageHero } from "../../../components/marketing/PageHero";
 import { Container, Section, SectionHeading } from "../../../components/marketing/Section";
 import { StructuredData } from "../../../components/seo/StructuredData";
 import { ButtonLink } from "../../../components/ui/Button";
-import { services } from "../../../content/services";
+import { listActiveServices } from "../../../server/cms/public";
 import { breadcrumbStructuredData, createMetadata } from "../../../lib/seo";
 
 export const metadata = createMetadata({
@@ -14,7 +14,8 @@ export const metadata = createMetadata({
   path: "/services",
 });
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const services = await listActiveServices();
   return (
     <>
       <StructuredData data={breadcrumbStructuredData([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }])} />
@@ -34,7 +35,7 @@ export default function ServicesPage() {
                 <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
                   <div>
                     <div className="flex items-center gap-4"><span className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 text-blue-400"><MarketingIcon icon={service.icon} className="h-6 w-6" /></span><span className="text-sm font-semibold text-slate-400">0{index + 1}</span></div>
-                    <h2 className="mt-6 text-2xl font-bold text-white">{service.name}</h2>
+                    <h2 className="mt-6 text-2xl font-bold text-white">{service.title}</h2>
                     <p className="mt-3 leading-7 text-slate-300">{service.summary}</p>
                     <ButtonLink href="/contact" variant="outline" size="sm" className="mt-6">Discuss this service</ButtonLink>
                   </div>

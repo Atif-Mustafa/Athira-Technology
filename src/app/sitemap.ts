@@ -1,9 +1,18 @@
 import { MetadataRoute } from "next";
 import { absoluteUrl } from "../config/site";
 import { agentsData } from "../content/agents";
-import { blogArticles } from "../content/blog";
+import { listPublishedPages, listPublishedPosts } from "../server/cms/public";
+import type { CmsPage, CmsPost } from "../server/cms/types";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  let blogArticles: CmsPost[] = [];
+  let cmsPages: CmsPage[] = [];
+  try {
+    [blogArticles, cmsPages] = await Promise.all([listPublishedPosts(), listPublishedPages()]);
+  } catch {
+    // Fixed routes remain valid if the CMS is temporarily unavailable.
+  }
+
   const agentUrls = agentsData.map((agent) => ({
     url: absoluteUrl(`/agents/${agent.slug}`),
     changeFrequency: "weekly" as const,
@@ -16,6 +25,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
+  const cmsPageUrls = cmsPages.map((page) => ({
+    url: absoluteUrl(page.canonicalPath),
+    lastModified: page.updatedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
   const publicPages = [
     { path: "/ai-software-engineer", priority: 0.9 },
     { path: "/agents", priority: 0.9 },
@@ -40,5 +55,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     ...agentUrls,
     ...blogUrls,
+    ...cmsPageUrls,
   ];
 }

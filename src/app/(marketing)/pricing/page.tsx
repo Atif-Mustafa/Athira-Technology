@@ -5,7 +5,8 @@ import { PageHero } from "../../../components/marketing/PageHero";
 import { Container, Section, SectionHeading } from "../../../components/marketing/Section";
 import { StructuredData } from "../../../components/seo/StructuredData";
 import { ButtonLink } from "../../../components/ui/Button";
-import { pricingComparison, pricingFaqs, pricingPlans } from "../../../content/pricing";
+import { pricingComparison, pricingFaqs } from "../../../content/pricing";
+import { listActivePricingPlans } from "../../../server/cms/public";
 import { breadcrumbStructuredData, createMetadata, faqStructuredData } from "../../../lib/seo";
 
 export const metadata = createMetadata({
@@ -14,7 +15,8 @@ export const metadata = createMetadata({
   path: "/pricing",
 });
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const pricingPlans = await listActivePricingPlans();
   return (
     <>
       <StructuredData data={[faqStructuredData(pricingFaqs), breadcrumbStructuredData([{ name: "Home", path: "/" }, { name: "Pricing", path: "/pricing" }])]} />
@@ -32,7 +34,7 @@ export default function PricingPage() {
             {pricingPlans.map((plan) => (
               <article key={plan.slug} className={`relative flex h-full flex-col rounded-3xl border p-7 ${plan.featured ? "border-blue-500/60 bg-blue-500/5" : "border-slate-800 bg-slate-950/50"}`}>
                 {plan.featured ? <span className="absolute right-5 top-5 rounded-full bg-blue-500/15 px-3 py-1 text-xs font-semibold text-blue-300">Prototype pathway</span> : null}
-                <p className="text-sm font-semibold text-blue-400">{plan.priceLabel}</p>
+                <p className="text-sm font-semibold text-blue-400">{plan.label}</p>
                 <h2 className="mt-3 text-2xl font-bold text-white">{plan.name}</h2>
                 <p className="mt-3 text-sm font-medium leading-6 text-slate-300">{plan.targetUser}</p>
                 <p className="mt-5 leading-7 text-slate-400">{plan.description}</p>
@@ -40,7 +42,7 @@ export default function PricingPage() {
                 <ul className="mt-4 space-y-3">{plan.features.map((feature) => <li key={feature} className="flex gap-3 text-sm text-slate-300"><CheckCircle2 aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />{feature}</li>)}</ul>
                 <h3 className="mt-7 font-semibold text-white">Boundaries</h3>
                 <ul className="mt-4 space-y-3">{plan.limitations.map((item) => <li key={item} className="flex gap-3 text-sm text-slate-400"><MinusCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />{item}</li>)}</ul>
-                <ButtonLink href="/contact" variant={plan.featured ? "primary" : "outline"} className="mt-8 w-full">{plan.cta}</ButtonLink>
+                <ButtonLink href={plan.ctaHref} variant={plan.featured ? "primary" : "outline"} className="mt-8 w-full">{plan.ctaLabel}</ButtonLink>
               </article>
             ))}
           </div>

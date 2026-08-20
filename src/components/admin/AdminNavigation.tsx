@@ -7,8 +7,8 @@ import { cn } from "../../lib/utils";
 const navigationItems = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin/dashboard" },
   { label: "Users", icon: Users, href: "/admin/users", adminOnly: true },
-  { label: "Content", icon: FileText },
-  { label: "Blog", icon: BookOpen },
+  { label: "Content", icon: FileText, href: "/admin/content" },
+  { label: "Blog", icon: BookOpen, href: "/admin/blog" },
   { label: "Analytics", icon: BarChart3 },
   { label: "Forms", icon: ClipboardList },
   { label: "SEO", icon: Search },

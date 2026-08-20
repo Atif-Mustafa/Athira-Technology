@@ -19,8 +19,7 @@ import {
   homepageFaqs,
   integrationCategories,
 } from "../../content/marketing";
-import { pricingPlans } from "../../content/pricing";
-import { services } from "../../content/services";
+import { listActivePricingPlans, listActiveServices } from "../../server/cms/public";
 import { faqStructuredData, softwareApplicationStructuredData } from "../../lib/seo";
 
 const title = "Human-Reviewed AI for the Software Lifecycle";
@@ -34,7 +33,10 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title, description },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [services, pricingPlans] = await Promise.all([
+    listActiveServices(), listActivePricingPlans(),
+  ]);
   return (
     <>
       <StructuredData data={[softwareApplicationStructuredData(), faqStructuredData(homepageFaqs)]} />
@@ -222,7 +224,7 @@ export default function HomePage() {
               <Card key={service.slug} className="h-full">
                 <CardHeader>
                   <MarketingIcon icon={service.icon} className="h-6 w-6 text-blue-400" />
-                  <CardTitle className="pt-4">{service.name}</CardTitle>
+                  <CardTitle className="pt-4">{service.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="leading-7">{service.summary}</p>
@@ -240,7 +242,7 @@ export default function HomePage() {
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {pricingPlans.map((plan) => (
               <div key={plan.slug} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
-                <p className="text-sm font-semibold text-blue-400">{plan.priceLabel}</p>
+                <p className="text-sm font-semibold text-blue-400">{plan.label}</p>
                 <h3 className="mt-2 text-xl font-semibold text-white">{plan.name}</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-400">{plan.targetUser}</p>
                 <ul className="mt-5 space-y-3">

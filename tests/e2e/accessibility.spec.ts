@@ -24,6 +24,11 @@ const accessibilityRoutes = [
   { name: "admin forbidden state", path: "/admin/forbidden" },
   { name: "admin user-management boundary", path: "/admin/users" },
   { name: "admin user detail boundary", path: "/admin/users/11111111-1111-4111-8111-111111111111" },
+  { name: "admin CMS overview boundary", path: "/admin/content" },
+  { name: "admin pages boundary", path: "/admin/content/pages" },
+  { name: "admin blog boundary", path: "/admin/blog" },
+  { name: "admin services boundary", path: "/admin/services" },
+  { name: "admin pricing boundary", path: "/admin/pricing" },
 ] as const;
 
 for (const route of accessibilityRoutes) {
