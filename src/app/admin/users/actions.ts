@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createSupabaseAdminClientForAdmin, SupabaseAdminConfigurationError } from "../../../lib/supabase/admin";
 import { createSupabaseServerClient } from "../../../lib/supabase/server";
 import { requireAdminRole } from "../../../server/auth/guards";
-import { APP_ROLES, parseAppRole, roleLabel, type AppRole } from "../../../server/auth/roles";
+import { APP_ROLES, parseAppRole, roleLabel } from "../../../server/auth/roles";
 
 export type AdminActionState = {
   kind: "idle" | "success" | "warning" | "error";
@@ -187,4 +187,3 @@ export async function setUserStatusAction(
   }
 }
 
-export const supportedAdminRoles: readonly AppRole[] = APP_ROLES;
