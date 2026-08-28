@@ -310,7 +310,9 @@ test("an unknown path returns the custom 404 page", async ({ page }) => {
 });
 
 test("user-management routes remain behind the admin authorization boundary", async ({ page }) => {
-  for (const path of ["/admin/users", "/admin/users/11111111-1111-4111-8111-111111111111"]) {
+  for (const path of ["/admin/users",
+  "/admin/enquiries",
+  "/admin/enquiries/11111111-1111-4111-8111-111111111111", "/admin/users/11111111-1111-4111-8111-111111111111"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/admin\/login/);
     const redirectedUrl = new URL(page.url());

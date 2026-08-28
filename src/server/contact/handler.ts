@@ -6,6 +6,7 @@ import {
 } from "../../lib/contact/schema";
 import {
   getContactServerConfig,
+  isContactEmailConfigured,
   type ContactServerConfig,
   type EnvironmentValidationResult,
 } from "../env";
@@ -21,11 +22,17 @@ import {
   type ContactOutcome,
 } from "./logging";
 import {
+  createContactPersistenceProvider,
+  type ContactPersistenceProvider,
+} from "./persistence";
+import {
   createContactRateLimiter,
   type ContactRateLimiter,
 } from "./rate-limit";
 import {
   createContactRequestId,
+  createDecoyContactReference,
+  getContactSubmissionKey,
   getTrustedClientAddress,
   hashRateLimitIdentifier,
   isAllowedContactOrigin,
@@ -36,21 +43,25 @@ type ContactHandlerDependencies = {
   getConfig: () => EnvironmentValidationResult;
   createRateLimiter: (config: ContactServerConfig) => ContactRateLimiter;
   createEmailProvider: (config: ContactServerConfig) => ContactEmailProvider;
+  createPersistenceProvider: () => ContactPersistenceProvider;
   createRequestId: () => string;
+  createDecoyReference: () => string;
   logger: ContactLogger;
   now: () => number;
 };
 
 type HandlerState = Pick<
   ContactLogEvent,
-  "validation" | "rateLimit" | "provider"
+  "validation" | "rateLimit" | "persistence" | "provider"
 >;
 
 const defaultDependencies: ContactHandlerDependencies = {
   getConfig: getContactServerConfig,
   createRateLimiter: createContactRateLimiter,
   createEmailProvider: createContactEmailProvider,
+  createPersistenceProvider: createContactPersistenceProvider,
   createRequestId: createContactRequestId,
+  createDecoyReference: createDecoyContactReference,
   logger: logContactEvent,
   now: Date.now,
 };
@@ -78,13 +89,16 @@ export function createContactHandler(
   const dependencies = { ...defaultDependencies, ...overrides };
   let cachedLimiter: ContactRateLimiter | undefined;
   let cachedProvider: ContactEmailProvider | undefined;
+  let cachedPersistence: ContactPersistenceProvider | undefined;
 
   return async function handleContactPost(request: Request): Promise<Response> {
     const startedAt = dependencies.now();
     const requestId = dependencies.createRequestId();
+    const submissionKey = getContactSubmissionKey(request);
     const state: HandlerState = {
       validation: "not_run",
       rateLimit: "not_run",
+      persistence: "not_run",
       provider: "not_run",
     };
 
@@ -112,239 +126,180 @@ export function createContactHandler(
         .toLowerCase();
 
       if (contentType !== "application/json") {
-        return finish(
-          "unsupported_media_type",
-          {
-            ok: false,
-            requestId,
-            code: "invalid_request",
-            message: "Submit the form using JSON.",
-          },
-          415,
-        );
+        return finish("unsupported_media_type", {
+          ok: false, requestId, code: "invalid_request", message: "Submit the form using JSON.",
+        }, 415);
       }
 
       const declaredLength = Number(request.headers.get("content-length"));
-      if (
-        Number.isFinite(declaredLength) &&
-        declaredLength > CONTACT_BODY_LIMIT_BYTES
-      ) {
-        return finish(
-          "oversized",
-          {
-            ok: false,
-            requestId,
-            code: "payload_too_large",
-            message: "The enquiry is too large to submit.",
-          },
-          413,
-        );
+      if (Number.isFinite(declaredLength) && declaredLength > CONTACT_BODY_LIMIT_BYTES) {
+        return finish("oversized", {
+          ok: false, requestId, code: "payload_too_large", message: "The enquiry is too large to submit.",
+        }, 413);
       }
 
-      const bodyRead = await readRequestBodyWithLimit(
-        request,
-        CONTACT_BODY_LIMIT_BYTES,
-      );
+      const bodyRead = await readRequestBodyWithLimit(request, CONTACT_BODY_LIMIT_BYTES);
       if (bodyRead.tooLarge) {
-        return finish(
-          "oversized",
-          {
-            ok: false,
-            requestId,
-            code: "payload_too_large",
-            message: "The enquiry is too large to submit.",
-          },
-          413,
-        );
+        return finish("oversized", {
+          ok: false, requestId, code: "payload_too_large", message: "The enquiry is too large to submit.",
+        }, 413);
       }
 
       let parsedBody: unknown;
       try {
         parsedBody = JSON.parse(bodyRead.body);
       } catch {
-        return finish(
-          "malformed",
-          {
-            ok: false,
-            requestId,
-            code: "invalid_request",
-            message: "The request could not be read.",
-          },
-          400,
-        );
+        return finish("malformed", {
+          ok: false, requestId, code: "invalid_request", message: "The request could not be read.",
+        }, 400);
       }
 
       const validation = contactSchema.safeParse(parsedBody);
       if (!validation.success) {
         state.validation = "rejected";
-        return finish(
-          "validation_rejected",
-          {
-            ok: false,
-            requestId,
-            code: "validation_error",
-            message: "Check the highlighted fields and try again.",
-            fieldErrors: flattenContactErrors(validation.error),
-          },
-          422,
-        );
+        return finish("validation_rejected", {
+          ok: false,
+          requestId,
+          code: "validation_error",
+          message: "Check the highlighted fields and try again.",
+          fieldErrors: flattenContactErrors(validation.error),
+        }, 422);
       }
 
       state.validation = "accepted";
       if (validation.data.website) {
-        return finish(
-          "honeypot_rejected",
-          {
-            ok: true,
-            requestId,
-            message: "Your enquiry has been accepted.",
-          },
-          202,
-        );
+        return finish("honeypot_rejected", {
+          ok: true,
+          referenceCode: dependencies.createDecoyReference(),
+          message: "Your enquiry has been received by Athira Technology.",
+        }, 202);
       }
 
       const configResult = dependencies.getConfig();
       if (!configResult.success) {
-        return finish(
-          "configuration_unavailable",
-          {
-            ok: false,
-            requestId,
-            code: "configuration_unavailable",
-            message:
-              "Contact delivery is not configured. Please try an approved alternative contact channel.",
-          },
-          503,
-        );
+        return finish("configuration_unavailable", {
+          ok: false,
+          requestId,
+          code: "configuration_unavailable",
+          message: "Contact protection is not configured. Please try an approved alternative contact channel.",
+        }, 503);
       }
 
       const config = configResult.config;
       if (!isAllowedContactOrigin(request, config)) {
-        return finish(
-          "origin_rejected",
-          {
-            ok: false,
-            requestId,
-            code: "invalid_request",
-            message: "This submission could not be accepted.",
-          },
-          403,
-        );
+        return finish("origin_rejected", {
+          ok: false, requestId, code: "invalid_request", message: "This submission could not be accepted.",
+        }, 403);
       }
 
       const address = getTrustedClientAddress(request, config);
       if (!address) {
         state.rateLimit = "unavailable";
-        return finish(
-          "rate_limit_unavailable",
-          {
-            ok: false,
-            requestId,
-            code: "service_unavailable",
-            message: "Contact protection is temporarily unavailable. Please try again later.",
-          },
-          503,
-        );
-      }
-
-      const rateLimitSecret = config.rateLimit.hashSecret;
-      const identifier = hashRateLimitIdentifier(address, rateLimitSecret);
-      cachedLimiter ??= dependencies.createRateLimiter(config);
-      const rateLimit = await cachedLimiter.limit(identifier);
-
-      if (!rateLimit.available) {
-        state.rateLimit = "unavailable";
-        return finish(
-          "rate_limit_unavailable",
-          {
-            ok: false,
-            requestId,
-            code: "service_unavailable",
-            message: "Contact protection is temporarily unavailable. Please try again later.",
-          },
-          503,
-        );
-      }
-
-      if (!rateLimit.allowed) {
-        state.rateLimit = "blocked";
-        const retryAfter = Math.max(
-          1,
-          Math.ceil((rateLimit.resetAt - dependencies.now()) / 1000),
-        );
-        return finish(
-          "rate_limited",
-          {
-            ok: false,
-            requestId,
-            code: "rate_limited",
-            message: "Too many enquiries were submitted. Please wait before trying again.",
-          },
-          429,
-          { "Retry-After": String(retryAfter) },
-        );
-      }
-
-      state.rateLimit = "allowed";
-      cachedProvider ??= dependencies.createEmailProvider(config);
-      const submittedAt = new Date(dependencies.now()).toISOString();
-      const message = renderContactEmail(
-        validation.data,
-        config,
-        requestId,
-        submittedAt,
-      );
-      const delivery = await cachedProvider.send(message);
-
-      if (delivery.status === "rejected") {
-        state.provider = "rejected";
-        return finish(
-          "provider_rejected",
-          {
-            ok: false,
-            requestId,
-            code: "delivery_failed",
-            message: "The enquiry could not be delivered. Your form entries have been preserved.",
-          },
-          502,
-        );
-      }
-
-      if (delivery.status === "unavailable") {
-        state.provider = "unavailable";
-        return finish(
-          "provider_unavailable",
-          {
-            ok: false,
-            requestId,
-            code: "service_unavailable",
-            message: "Contact delivery is temporarily unavailable. Please try again later.",
-          },
-          503,
-        );
-      }
-
-      state.provider = "accepted";
-      return finish(
-        "accepted",
-        {
-          ok: true,
-          requestId,
-          message: "Your enquiry was delivered to Athira Technology.",
-        },
-        202,
-      );
-    } catch {
-      return finish(
-        "unexpected_failure",
-        {
+        return finish("rate_limit_unavailable", {
           ok: false,
           requestId,
-          code: "unexpected_error",
-          message: "An unexpected error prevented delivery. Please try again later.",
-        },
-        500,
-      );
+          code: "service_unavailable",
+          message: "Contact protection is temporarily unavailable. Please try again later.",
+        }, 503);
+      }
+
+      const identifier = hashRateLimitIdentifier(address, config.rateLimit.hashSecret);
+      cachedLimiter ??= dependencies.createRateLimiter(config);
+      const rateLimit = await cachedLimiter.limit(identifier);
+      if (!rateLimit.available) {
+        state.rateLimit = "unavailable";
+        return finish("rate_limit_unavailable", {
+          ok: false,
+          requestId,
+          code: "service_unavailable",
+          message: "Contact protection is temporarily unavailable. Please try again later.",
+        }, 503);
+      }
+      if (!rateLimit.allowed) {
+        state.rateLimit = "blocked";
+        const retryAfter = Math.max(1, Math.ceil((rateLimit.resetAt - dependencies.now()) / 1000));
+        return finish("rate_limited", {
+          ok: false,
+          requestId,
+          code: "rate_limited",
+          message: "Too many enquiries were submitted. Please wait before trying again.",
+        }, 429, { "Retry-After": String(retryAfter) });
+      }
+      state.rateLimit = "allowed";
+
+      try {
+        cachedPersistence ??= dependencies.createPersistenceProvider();
+        const persisted = await cachedPersistence.persist(
+          validation.data,
+          requestId,
+          submissionKey,
+        );
+        state.persistence = persisted.created ? "created" : "existing";
+
+        if (persisted.notificationStatus === "pending") {
+          let notificationStatus: "sent" | "failed" = "failed";
+          if (isContactEmailConfigured(config)) {
+            try {
+              cachedProvider ??= dependencies.createEmailProvider(config);
+              const email = renderContactEmail(
+                validation.data,
+                config,
+                requestId,
+                persisted.referenceCode,
+                submissionKey,
+                new Date(dependencies.now()).toISOString(),
+              );
+              const delivery = await cachedProvider.send(email);
+              if (delivery.status === "accepted") {
+                state.provider = "accepted";
+                notificationStatus = "sent";
+              } else {
+                state.provider = delivery.status;
+              }
+            } catch {
+              state.provider = "unavailable";
+            }
+          } else {
+            state.provider = "unavailable";
+          }
+
+          try {
+            await cachedPersistence.setNotificationStatus(persisted.enquiryId, notificationStatus);
+          } catch {
+            state.persistence = "update_failed";
+          }
+        } else {
+          state.provider = "not_run";
+        }
+
+        const degraded = state.provider === "rejected"
+          || state.provider === "unavailable"
+          || state.persistence === "update_failed";
+        return finish(
+          degraded ? "accepted_notification_degraded" : persisted.created ? "accepted" : "accepted_duplicate",
+          {
+            ok: true,
+            referenceCode: persisted.referenceCode,
+            message: "Your enquiry has been received by Athira Technology.",
+          },
+          202,
+        );
+      } catch {
+        state.persistence = "failed";
+        return finish("persistence_unavailable", {
+          ok: false,
+          requestId,
+          code: "service_unavailable",
+          message: "The enquiry could not be stored safely. Your form entries have been preserved.",
+        }, 503);
+      }
+    } catch {
+      return finish("unexpected_failure", {
+        ok: false,
+        requestId,
+        code: "unexpected_error",
+        message: "An unexpected error prevented submission. Please try again later.",
+      }, 500);
     }
   };
 }

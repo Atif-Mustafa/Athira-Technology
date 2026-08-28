@@ -60,8 +60,8 @@ test("confirmed provider acceptance displays success and clears the form", async
       contentType: "application/json",
       body: JSON.stringify({
         ok: true,
-        requestId: "contact_e2e_success",
-        message: "Your enquiry was delivered to Athira Technology.",
+        referenceCode: "ATH-A11E2E0001",
+        message: "Your enquiry has been received by Athira Technology.",
       }),
     });
   });
@@ -72,8 +72,8 @@ test("confirmed provider acceptance displays success and clears the form", async
 
   const status = page.getByRole("status");
   await expect(status).toBeFocused();
-  await expect(status).toContainText("Enquiry delivered");
-  await expect(status).toContainText("contact_e2e_success");
+  await expect(status).toContainText("Enquiry received");
+  await expect(status).toContainText("ATH-A11E2E0001");
   await expect(page.getByLabel("Full name")).toHaveValue("");
   await expect(page.getByRole("checkbox", { name: /I have read/ })).not.toBeChecked();
 });

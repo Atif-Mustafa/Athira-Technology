@@ -80,21 +80,26 @@ test("contact client-validation state has no serious or critical axe violations"
 
 test("contact submitting state has no serious or critical axe violations", async ({ page }) => {
   let releaseRequest!: () => void;
+  let markRequestStarted!: () => void;
+  const requestStarted = new Promise<void>((resolve) => { markRequestStarted = resolve; });
   await page.route("**/api/contact", async (route) => {
-    await new Promise<void>((resolve) => { releaseRequest = resolve; });
+    const release = new Promise<void>((resolve) => { releaseRequest = resolve; });
+    markRequestStarted();
+    await release;
     await route.fulfill({
       status: 202,
       contentType: "application/json",
-      body: JSON.stringify({ ok: true, requestId: "contact_axe", message: "Delivered." }),
+      body: JSON.stringify({ ok: true, referenceCode: "ATH-A11E000002", message: "Your enquiry has been received by Athira Technology." }),
     });
   });
   await page.goto("/contact");
   await fillAccessibleContactForm(page);
   await page.getByRole("button", { name: "Send enquiry" }).click();
+  await requestStarted;
   await expect(page.getByRole("button", { name: /Sending enquiry/ })).toBeDisabled();
   await expectNoBlockingViolations(page);
   releaseRequest();
-  await expect(page.getByText("Enquiry delivered")).toBeVisible();
+  await expect(page.getByText("Enquiry received")).toBeVisible();
 });
 
 for (const state of ["success", "failure"] as const) {
@@ -105,7 +110,7 @@ for (const state of ["success", "failure"] as const) {
         contentType: "application/json",
         body: JSON.stringify(
           state === "success"
-            ? { ok: true, requestId: "contact_axe_success", message: "Delivered." }
+            ? { ok: true, referenceCode: "ATH-A11E000002", message: "Your enquiry has been received by Athira Technology." }
             : {
                 ok: false,
                 requestId: "contact_axe_failure",

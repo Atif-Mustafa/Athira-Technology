@@ -15,9 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/Card";
-import { requireAuthenticatedUser } from "../../../server/auth/guards";
+import { getEnquiryCounts } from "../../../server/enquiries/data";
+import { requireEnquiryViewer } from "../../../server/enquiries/guards";
 import { signOutAction } from "../actions";
 import { roleLabel } from "../../../server/auth/roles";
+
+export const dynamic = "force-dynamic";
 
 const overviewCards = [
   {
@@ -94,11 +97,14 @@ const systemStatuses = [
   { label: "Rate limiting", value: "Configured", state: "Implemented" },
   { label: "User management", value: "Implemented", state: "Implemented" },
   { label: "CMS", value: "Implemented", state: "Runtime acceptance pending" },
+  { label: "Enquiries", value: "Implemented", state: "Runtime acceptance pending" },
   { label: "Analytics backend", value: "Not implemented", state: "Planned" },
 ] as const;
 
 export default async function AdminDashboardPage() {
-  const auth = await requireAuthenticatedUser();
+  const auth = await requireEnquiryViewer("/admin/dashboard");
+  let enquiryCounts: Awaited<ReturnType<typeof getEnquiryCounts>> | null = null;
+  try { enquiryCounts = await getEnquiryCounts(auth); } catch { /* Keep dashboard available during enquiry database outages. */ }
   const displayName = auth.profile?.display_name?.trim() || auth.user?.email || "Authenticated user";
 
   return (
@@ -131,6 +137,15 @@ export default async function AdminDashboardPage() {
 
       </div>
 
+      <section aria-labelledby="enquiry-operations-heading">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="enquiry-operations-heading" className="text-lg font-semibold text-white">Enquiry operations</h2>
+          <Badge variant={enquiryCounts ? "success" : "warning"}>{enquiryCounts ? "Live database counts" : "Database unavailable"}</Badge>
+        </div>
+        {enquiryCounts ? <dl className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[["New enquiries", enquiryCounts.new], ["Open enquiries", enquiryCounts.open], ["Unassigned enquiries", enquiryCounts.unassigned], ["Notification failures", enquiryCounts.notificationFailures]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4"><dt className="text-sm text-slate-400">{label}</dt><dd className="mt-2 text-2xl font-bold text-white">{value}</dd></div>)}
+        </dl> : <p className="mt-4 rounded-xl border border-amber-400/25 bg-amber-400/10 p-4 text-sm text-amber-100">Operational enquiry counts are temporarily unavailable. Other admin modules remain accessible.</p>}
+      </section>
       <section aria-labelledby="overview-kpi-heading">
         <div className="flex items-center justify-between gap-3">
           <h2 id="overview-kpi-heading" className="text-lg font-semibold text-white">

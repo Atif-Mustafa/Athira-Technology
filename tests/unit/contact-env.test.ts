@@ -32,7 +32,6 @@ describe("contact server environment", () => {
     if (!result.success) {
       const message = result.issues.join(" ");
       expect(message).toContain("NEXT_PUBLIC_SITE_URL");
-      expect(message).toContain("RESEND_API_KEY");
       expect(message).toContain("Upstash");
       expect(message).not.toContain("re_test_key_long_enough");
     }

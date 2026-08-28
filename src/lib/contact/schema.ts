@@ -74,7 +74,7 @@ export type ContactApiErrorCode =
 export type ContactApiResponse =
   | {
       ok: true;
-      requestId: string;
+      referenceCode: string;
       message: string;
     }
   | {

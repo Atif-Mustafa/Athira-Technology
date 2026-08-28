@@ -15,7 +15,7 @@ const sections = [
   {
     title: "Current website behavior",
     paragraphs: [
-      "This repository implements a public informational website and an email-delivered business-enquiry form. It does not include user accounts, analytics providers, advertising trackers, a contact database, a CMS, or production AI features.",
+      "This repository implements a public informational website and a durably stored business-enquiry form and protected staff workflow. It includes protected staff accounts and a Supabase-backed enquiry/CMS database, but no public customer accounts, analytics providers, advertising trackers, CRM, or production AI features.",
       "The contact form must not be used for passwords, source code, payment details, identity documents, health information, or other confidential, regulated, or sensitive information.",
     ],
   },
@@ -30,19 +30,19 @@ const sections = [
     title: "Technical request information",
     paragraphs: [
       "Vercel and network providers may process ordinary request information such as an IP address, user agent, requested path, timestamp, and diagnostic logs. For contact rate limiting, the server reads the Vercel-controlled client address, immediately converts it to a keyed one-way hash, and sends only that opaque identifier to the rate-limit service. The application does not log the raw address.",
-      "Operational contact logs contain a timestamp, request identifier, outcome categories, validation and rate-limit state, provider acceptance category, and duration. They exclude names, complete email addresses, messages, raw IP addresses, API keys, recipient addresses, and provider payloads.",
+      "Operational contact logs contain a timestamp, request identifier, outcome categories, validation, rate-limit, persistence and notification state, and duration. They exclude names, complete email addresses, messages, raw IP addresses, API keys, recipient addresses, and provider payloads.",
     ],
   },
   {
     title: "Cookies, analytics, and profiling",
     paragraphs: [
-      "The application code does not currently set analytics, advertising, preference, or authentication cookies. It does not implement visitor profiling or behavioral analytics. If those capabilities are introduced later, consent, configuration, retention, and disclosure requirements must be reviewed before launch.",
+      "The public website does not set analytics, advertising, or preference cookies. Protected staff authentication uses necessary cookie-based sessions on admin routes. It does not implement visitor profiling or behavioral analytics. If those capabilities are introduced later, consent, configuration, retention, and disclosure requirements must be reviewed before launch.",
     ],
   },
   {
     title: "Email delivery and abuse controls",
     paragraphs: [
-      "Accepted enquiries are sent through Resend to one configured Athira Technology recipient. The validated visitor email is used as the reply-to address, not as the sender. The application does not keep a database copy, but the configured recipient mailbox and Resend may retain delivery and message records under their settings and agreements.",
+      "Accepted enquiries are sent through Resend to one configured Athira Technology recipient. The validated visitor email is used as the reply-to address, not as the sender. The application stores the enquiry in Supabase before attempting notification. The configured recipient mailbox and Resend may also retain delivery and message records under their settings and agreements.",
       "Upstash Redis provides distributed rate limiting for production. It receives a keyed hash rather than the raw client address. A small process-local limiter is permitted only for local development and automated tests and is not treated as production protection.",
     ],
   },
@@ -50,7 +50,7 @@ const sections = [
     title: "Access, retention, and service providers",
     paragraphs: [
       "Access should be limited to approved Athira Technology personnel who handle business enquiries and to the service providers required for hosting, email delivery, and rate limiting. This draft does not confirm contractual roles, data-processing agreements, storage regions, or international-transfer mechanisms; those details require owner and legal review against the selected accounts and deployment region.",
-      "Retention period requiring business approval: [PROJECT OWNER TO APPROVE MAILBOX, RESEND, UPSTASH, AND VERCEL RETENTION SETTINGS BEFORE LAUNCH]. No retention period is invented by this draft.",
+      "Retention period requiring business approval: [PROJECT OWNER TO APPROVE SUPABASE, MAILBOX, RESEND, UPSTASH, AND VERCEL RETENTION SETTINGS BEFORE LAUNCH]. No retention period is invented by this draft.",
     ],
   },
   {
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
           </div>
         </Container>
       </Section>
-      <CallToAction title="Have a question about the contact process?" description="The contact form validates and abuse-checks business enquiries before asking the configured email provider to deliver them. Do not submit sensitive information." primaryLabel="Review the contact form" secondaryLabel="Return to the product" secondaryHref="/ai-software-engineer" />
+      <CallToAction title="Have a question about the contact process?" description="The contact form validates and abuse-checks business enquiries before securely storing them and attempting an email notification. Do not submit sensitive information." primaryLabel="Review the contact form" secondaryLabel="Return to the product" secondaryHref="/ai-software-engineer" />
     </>
   );
 }

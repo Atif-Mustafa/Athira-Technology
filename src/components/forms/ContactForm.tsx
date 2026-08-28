@@ -40,7 +40,7 @@ type FormStatus =
   | { kind: "submitting"; message: string }
   | { kind: "validation"; message: string }
   | { kind: "error"; message: string; requestId?: string }
-  | { kind: "success"; message: string; requestId: string };
+  | { kind: "success"; message: string; referenceCode: string };
 
 const initialValues: ContactFormValues = {
   fullName: "",
@@ -82,16 +82,15 @@ function FieldError({ field, errors }: { field: ContactFieldName; errors: Contac
 }
 
 function isContactApiResponse(value: unknown): value is ContactApiResponse {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "ok" in value &&
-    typeof value.ok === "boolean" &&
-    "requestId" in value &&
-    typeof value.requestId === "string" &&
-    "message" in value &&
-    typeof value.message === "string"
-  );
+  if (
+    typeof value !== "object" || value === null || !("ok" in value) ||
+    typeof value.ok !== "boolean" || !("message" in value) ||
+    typeof value.message !== "string"
+  ) return false;
+  return value.ok
+    ? "referenceCode" in value && typeof value.referenceCode === "string"
+    : "requestId" in value && typeof value.requestId === "string" &&
+      "code" in value && typeof value.code === "string";
 }
 
 export function ContactForm() {
@@ -99,6 +98,7 @@ export function ContactForm() {
   const [errors, setErrors] = useState<ContactFieldErrors>({});
   const [status, setStatus] = useState<FormStatus>({ kind: "idle" });
   const requestInFlight = useRef(false);
+  const submissionKey = useRef<string | null>(null);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
 
@@ -134,13 +134,17 @@ export function ContactForm() {
     }
 
     requestInFlight.current = true;
+    submissionKey.current ??= crypto.randomUUID();
     setErrors({});
     setStatus({ kind: "submitting", message: "Sending your enquiry securely…" });
 
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Contact-Submission-Key": submissionKey.current,
+        },
         body: JSON.stringify(validation.data),
       });
       const payload: unknown = await response.json().catch(() => null);
@@ -158,8 +162,9 @@ export function ContactForm() {
         setStatus({
           kind: "success",
           message: payload.message,
-          requestId: payload.requestId,
+          referenceCode: payload.referenceCode,
         });
+        submissionKey.current = null;
         return;
       }
 
@@ -175,7 +180,7 @@ export function ContactForm() {
       setStatus({
         kind: "error",
         message: safeMessage,
-        requestId: payload.requestId,
+        requestId: !payload.ok ? payload.requestId : undefined,
       });
     } catch {
       setStatus({
@@ -197,7 +202,7 @@ export function ContactForm() {
       <div className="mb-8 flex gap-3 rounded-2xl border border-blue-400/20 bg-blue-400/5 p-5 text-sm leading-6 text-slate-200">
         <ShieldCheck aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-blue-300" />
         <p>
-          Submission sends this enquiry to Athira Technology through its configured email provider. Do not include passwords, source code, financial details, identity documents, health information, or other sensitive data.
+          Submission securely stores this enquiry for authorized Athira Technology staff and attempts an email notification. Do not include passwords, source code, financial details, identity documents, health information, or other sensitive data.
         </p>
       </div>
 
@@ -225,7 +230,7 @@ export function ContactForm() {
                 </ul>
               ) : null}
               {status.kind === "error" && status.requestId ? (
-                <p className="mt-3 text-xs text-red-100">Reference: {status.requestId}</p>
+                <p className="mt-3 text-xs text-red-100">Request reference: {status.requestId}</p>
               ) : null}
             </div>
           </div>
@@ -242,9 +247,9 @@ export function ContactForm() {
           <div className="flex gap-3">
             <CheckCircle2 aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
             <div>
-              <h3 className="font-semibold text-white">Enquiry delivered</h3>
+              <h3 className="font-semibold text-white">Enquiry received</h3>
               <p className="mt-2 text-sm text-emerald-100">{status.message}</p>
-              <p className="mt-2 text-xs text-emerald-100">Reference: {status.requestId}</p>
+              <p className="mt-2 text-xs text-emerald-100">Reference: {status.referenceCode}</p>
             </div>
           </div>
         </div>
@@ -348,7 +353,7 @@ export function ContactForm() {
               className="mt-1 h-5 w-5 shrink-0 rounded border-slate-600 bg-slate-950 text-blue-600 focus:ring-blue-400"
             />
             <label htmlFor="consent" className="text-sm leading-6 text-slate-300">
-              I have read the <Link href="/privacy" className="font-semibold text-blue-300 underline hover:no-underline">draft privacy notice</Link> and acknowledge that this enquiry will be delivered by email. <span aria-hidden="true" className="text-red-300">*</span>
+              I have read the <Link href="/privacy" className="font-semibold text-blue-300 underline hover:no-underline">draft privacy notice</Link> and acknowledge that this enquiry will be stored for operational response and may trigger an email notification. <span aria-hidden="true" className="text-red-300">*</span>
             </label>
           </div>
           <p id="consent-description" className="mt-2 pl-8 text-xs leading-5 text-slate-400">This acknowledgment is not pre-selected and does not subscribe you to marketing.</p>
@@ -361,7 +366,7 @@ export function ContactForm() {
               <><LoaderCircle aria-hidden="true" className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" />Sending enquiry…</>
             ) : "Send enquiry"}
           </Button>
-          <p id="submit-description" className="mt-3 text-sm leading-6 text-slate-400">The server validates every submission and sends accepted enquiries to Athira Technology. No database copy is created by this application.</p>
+          <p id="submit-description" className="mt-3 text-sm leading-6 text-slate-400">The server validates, abuse-checks, and durably stores accepted enquiries before attempting an internal email notification.</p>
           {status.kind === "submitting" ? <p role="status" aria-live="polite" className="sr-only">{status.message}</p> : null}
         </div>
       </form>

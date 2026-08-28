@@ -68,7 +68,7 @@ export default async function PricingPage() {
           <FaqList faqs={pricingFaqs} />
         </Container>
       </Section>
-      <CallToAction title="Get a quote based on real scope" description="Tell us which workflow, systems, reviewers, and constraints are involved. The secure contact workflow validates and email-delivers accepted business enquiries without application database storage." primaryLabel="Start an enquiry" secondaryLabel="Explore services" secondaryHref="/services" />
+      <CallToAction title="Get a quote based on real scope" description="Tell us which workflow, systems, reviewers, and constraints are involved. The secure contact workflow validates and email-delivers accepted business enquiries with durable storage before notification." primaryLabel="Start an enquiry" secondaryLabel="Explore services" secondaryHref="/services" />
     </>
   );
 }

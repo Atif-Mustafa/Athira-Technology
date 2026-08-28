@@ -35,6 +35,8 @@ describe("contact email rendering", () => {
       },
       config,
       "contact_test_request",
+      "ATH-ABCDEF1234",
+      "11111111-1111-4111-8111-111111111111",
       "2026-08-06T00:00:00.000Z",
     );
 
@@ -47,6 +49,8 @@ describe("contact email rendering", () => {
     expect(message.html).toContain("A &amp; B");
     expect(message.text).toContain("Review <b>this</b> & reply.");
     expect(message.text).toContain("contact_test_request");
+    expect(message.text).toContain("ATH-ABCDEF1234");
+    expect(message.idempotencyKey).toBe("11111111-1111-4111-8111-111111111111");
   });
 
   it("escapes quotes and apostrophes", () => {

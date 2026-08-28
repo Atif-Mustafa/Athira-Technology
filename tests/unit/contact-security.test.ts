@@ -100,6 +100,7 @@ describe("contact request security", () => {
       outcome: "accepted",
       validation: "accepted",
       rateLimit: "allowed",
+      persistence: "created",
       provider: "accepted",
       durationMs: 25,
     });

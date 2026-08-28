@@ -10,7 +10,7 @@ const navigationItems = [
   { label: "Content", icon: FileText, href: "/admin/content" },
   { label: "Blog", icon: BookOpen, href: "/admin/blog" },
   { label: "Analytics", icon: BarChart3 },
-  { label: "Forms", icon: ClipboardList },
+  { label: "Enquiries", icon: ClipboardList, href: "/admin/enquiries" },
   { label: "SEO", icon: Search },
   { label: "Activity", icon: Activity },
   { label: "Settings", icon: Settings },

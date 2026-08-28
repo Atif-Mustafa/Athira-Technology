@@ -5,8 +5,8 @@ import { ContactForm } from "@/components/forms/ContactForm";
 
 const successPayload = {
   ok: true,
-  requestId: "contact_success",
-  message: "Your enquiry was delivered to Athira Technology.",
+  referenceCode: "ATH-ABCDEF1234",
+  message: "Your enquiry has been received by Athira Technology.",
 };
 
 function apiResponse(body: object, status: number) {
@@ -82,7 +82,7 @@ describe("contact form", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
 
     resolveRequest(apiResponse(successPayload, 202));
-    expect(await screen.findByText("Enquiry delivered")).toBeVisible();
+    expect(await screen.findByText("Enquiry received")).toBeVisible();
   });
 
   it.each([
@@ -143,8 +143,8 @@ describe("contact form", () => {
 
     const status = await screen.findByRole("status");
     expect(status).toHaveFocus();
-    expect(status).toHaveTextContent("Enquiry delivered");
-    expect(status).toHaveTextContent("contact_success");
+    expect(status).toHaveTextContent("Enquiry received");
+    expect(status).toHaveTextContent("ATH-ABCDEF1234");
     await waitFor(() => expect(screen.getByLabelText(/Full name/)).toHaveValue(""));
     expect(screen.getByRole("checkbox", { name: /I have read/ })).not.toBeChecked();
   });

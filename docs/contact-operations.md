@@ -1,6 +1,6 @@
 # Contact operations runbook
 
-This runbook covers the implemented email-delivered contact workflow. It is intentionally limited to Vercel, Resend, Upstash, and the approved recipient mailbox; no third-party monitoring, analytics, CRM, or contact database is present.
+This runbook covers the implemented durable contact-enquiry workflow. It is intentionally limited to Vercel, Resend, Upstash, and the approved recipient mailbox; no third-party monitoring, analytics, or CRM is present.
 
 ## Request lifecycle
 
@@ -9,11 +9,11 @@ This runbook covers the implemented email-delivered contact workflow. It is inte
 3. A completed hidden honeypot receives a neutral response and is not delivered.
 4. The server validates the browser origin and reads the client address only from trusted Vercel forwarding headers in production.
 5. The address is immediately HMAC-hashed and checked against the distributed three-per-15-minute limit.
-6. User fields are rendered into escaped HTML and plain text.
-7. Resend sends to the configured recipient with the user address as `replyTo`.
-8. Only provider acceptance produces the delivered UI state and a request identifier.
+6. The service-role-only persistence RPC creates or returns the idempotent enquiry and safe reference.
+7. User fields are rendered into escaped email and Resend notification is attempted with the user address as reply-to.
+8. Notification state is recorded independently and the API returns only the safe enquiry reference.
 
-The application writes no enquiry to a database. Copies and delivery metadata may exist in Vercel request infrastructure, Resend, and the recipient mailbox according to account settings.
+Supabase is the durable source of truth. Notification failure leaves the enquiry intact. Additional copies or delivery metadata may exist in Vercel, Resend, and the recipient mailbox according to account settings.
 
 ## Structured logs
 
@@ -24,6 +24,7 @@ Each contact attempt emits one JSON event named `contact_submission`. Allowed fi
 - `outcome`
 - `validation`
 - `rateLimit`
+- `persistence`
 - `provider`
 - `durationMs`
 
@@ -49,7 +50,7 @@ Use the Vercel project dashboard's Logs view, select the relevant deployment/env
 
 ## User-reported delivery issue
 
-1. Ask for the displayed `contact_...` request ID, approximate time, and deployment hostname. Do not ask the visitor to resend sensitive message content through an insecure channel.
+1. Ask for the displayed `ATH-...` enquiry reference, approximate time, and deployment hostname. Do not ask the visitor to resend sensitive message content through an insecure channel.
 2. Find the matching structured Vercel event.
 3. If `accepted`, inspect Resend's restricted dashboard for the corresponding time/idempotency key and verify recipient mailbox routing, quarantine, and spam handling.
 4. If configuration, rate-limit, provider, or unexpected failure occurred, follow the outcome guide and check relevant provider status pages.
@@ -74,7 +75,7 @@ IP-based controls are imperfect: offices, schools, VPNs, carrier-grade NAT, and 
 - Verify Resend sender-domain status and API-key scope before changing application code.
 - Verify both Upstash REST variables, service status, and region/account access together.
 - Rotate a suspected credential in its provider first, update Vercel, redeploy, and confirm the old credential is revoked.
-- A `503` is the intended safe behavior when delivery or production abuse protection cannot operate.
+- A `503` is the intended safe behavior when durable persistence or production abuse protection cannot operate. Notification failure after persistence remains an accepted enquiry.
 - A `502` means the provider rejected the send; the UI preserves visitor entries and does not claim success.
 
 ## Retention and access decisions
@@ -82,7 +83,7 @@ IP-based controls are imperfect: offices, schools, VPNs, carrier-grade NAT, and 
 Before production launch, the project owner and legal reviewer must approve:
 
 - recipient-mailbox access and forwarding;
-- mailbox, Resend, Upstash, and Vercel retention/deletion settings;
+- Supabase, mailbox, Resend, Upstash, and Vercel retention/deletion settings;
 - service-provider agreements, regions, and any applicable international processing;
 - a verified privacy-rights address and response procedure;
 - incident ownership and escalation contacts.

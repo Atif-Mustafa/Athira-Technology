@@ -5,6 +5,17 @@ export function createContactRequestId(): string {
   return `contact_${randomUUID()}`;
 }
 
+export function getContactSubmissionKey(request: Request): string {
+  const candidate = request.headers.get("x-contact-submission-key")?.trim();
+  return candidate && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(candidate)
+    ? candidate.toLowerCase()
+    : randomUUID();
+}
+
+export function createDecoyContactReference(): string {
+  return `ATH-${randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
+}
+
 export async function readRequestBodyWithLimit(
   request: Request,
   maximumBytes: number,

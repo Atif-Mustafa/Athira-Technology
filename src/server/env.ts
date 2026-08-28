@@ -99,13 +99,14 @@ export function validateServerEnvironment(
   const fromEmail = environment.CONTACT_FROM_EMAIL?.trim() ?? "";
   const toEmail = environment.CONTACT_TO_EMAIL?.trim() ?? "";
 
-  if (apiKey.length < 10) {
-    issues.push("RESEND_API_KEY is required for contact delivery.");
+  const hasAnyEmailConfiguration = Boolean(apiKey || fromEmail || toEmail);
+  if (hasAnyEmailConfiguration && apiKey.length < 10) {
+    issues.push("RESEND_API_KEY must be complete when contact notification is configured.");
   }
-  if (!senderAddress.safeParse(fromEmail).success) {
+  if (hasAnyEmailConfiguration && !senderAddress.safeParse(fromEmail).success) {
     issues.push("CONTACT_FROM_EMAIL must be a valid verified sender address.");
   }
-  if (!emailAddress.safeParse(toEmail).success) {
+  if (hasAnyEmailConfiguration && !emailAddress.safeParse(toEmail).success) {
     issues.push("CONTACT_TO_EMAIL must be a valid recipient address.");
   }
 
@@ -179,6 +180,12 @@ export function validateServerEnvironment(
 
 export function getContactServerConfig(): EnvironmentValidationResult {
   return validateServerEnvironment(process.env);
+}
+
+export function isContactEmailConfigured(config: ContactServerConfig): boolean {
+  return config.email.apiKey.length >= 10
+    && senderAddress.safeParse(config.email.fromEmail).success
+    && emailAddress.safeParse(config.email.toEmail).success;
 }
 
 

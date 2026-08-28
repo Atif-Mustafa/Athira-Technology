@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 import type { ContactServerConfig, EnvironmentValidationResult } from "@/server/env";
 import type { ContactEmailResult } from "@/server/contact/email";
 import { createContactHandler } from "@/server/contact/handler";
@@ -58,29 +60,36 @@ function setup({
   rateLimitResult = allowed,
   emailResult = { status: "accepted", providerMessageId: "email_test" } as ContactEmailResult,
   emailFailure,
+  persistenceFailure,
 }: {
   configResult?: EnvironmentValidationResult;
   rateLimitResult?: ContactRateLimitResult;
   emailResult?: ContactEmailResult;
   emailFailure?: Error;
+  persistenceFailure?: Error;
 } = {}) {
   const limit = vi.fn().mockResolvedValue(rateLimitResult);
   const send = emailFailure
     ? vi.fn().mockRejectedValue(emailFailure)
     : vi.fn().mockResolvedValue(emailResult);
+  const persist = persistenceFailure ? vi.fn().mockRejectedValue(persistenceFailure) : vi.fn().mockResolvedValue({ enquiryId: "11111111-1111-4111-8111-111111111111", referenceCode: "ATH-ABCDEF1234", notificationStatus: "pending", created: true });
+  const setNotificationStatus = vi.fn().mockResolvedValue(undefined);
   const logger = vi.fn();
   const createRateLimiter = vi.fn(() => ({ limit }));
   const createEmailProvider = vi.fn(() => ({ send }));
+  const createPersistenceProvider = vi.fn(() => ({ persist, setNotificationStatus }));
   const handler = createContactHandler({
     getConfig: () => configResult,
     createRateLimiter,
     createEmailProvider,
+    createPersistenceProvider,
     createRequestId: () => "contact_test_request",
+    createDecoyReference: () => "ATH-DECOY00000",
     logger,
     now: () => 1_000,
   });
 
-  return { handler, limit, send, logger, createRateLimiter, createEmailProvider };
+  return { handler, limit, persist, setNotificationStatus, send, logger, createRateLimiter, createEmailProvider, createPersistenceProvider };
 }
 
 async function responseJson(response: Response) {
@@ -88,7 +97,7 @@ async function responseJson(response: Response) {
 }
 
 describe("POST /api/contact", () => {
-  it("accepts a valid enquiry only after rate limiting and provider acceptance", async () => {
+  it("persists a valid enquiry before attempting its email notification", async () => {
     const context = setup();
     const response = await context.handler(makeRequest());
     const body = await responseJson(response);
@@ -98,15 +107,17 @@ describe("POST /api/contact", () => {
     expect(response.headers.get("x-request-id")).toBe("contact_test_request");
     expect(body).toEqual({
       ok: true,
-      requestId: "contact_test_request",
-      message: "Your enquiry was delivered to Athira Technology.",
+      referenceCode: "ATH-ABCDEF1234",
+      message: "Your enquiry has been received by Athira Technology.",
     });
     expect(context.limit).toHaveBeenCalledOnce();
     expect(context.limit.mock.calls[0][0]).toMatch(/^[0-9a-f]{64}$/);
+    expect(context.persist).toHaveBeenCalledOnce();
     expect(context.send).toHaveBeenCalledOnce();
+    expect(context.persist.mock.invocationCallOrder[0]).toBeLessThan(context.send.mock.invocationCallOrder[0]);
     expect(context.send.mock.calls[0][0]).toMatchObject({
       replyTo: "ada@example.com",
-      requestId: "contact_test_request",
+      idempotencyKey: expect.stringMatching(/^[0-9a-f-]{36}$/),
     });
   });
 
@@ -168,6 +179,7 @@ describe("POST /api/contact", () => {
     expect(await responseJson(response)).toMatchObject({ ok: true });
     expect(context.createRateLimiter).not.toHaveBeenCalled();
     expect(context.createEmailProvider).not.toHaveBeenCalled();
+    expect(context.createPersistenceProvider).not.toHaveBeenCalled();
   });
 
   it("returns Retry-After when the client is rate limited", async () => {
@@ -216,29 +228,31 @@ describe("POST /api/contact", () => {
   });
 
   it.each([
-    [{ status: "rejected" } as ContactEmailResult, 502, "delivery_failed"],
-    [{ status: "unavailable" } as ContactEmailResult, 503, "service_unavailable"],
-  ])("maps provider result %j to a safe response", async (emailResult, status, code) => {
+    [{ status: "rejected" } as ContactEmailResult, "rejected"],
+    [{ status: "unavailable" } as ContactEmailResult, "unavailable"],
+  ])("keeps the enquiry when provider result is %j", async (emailResult, providerState) => {
     const context = setup({ emailResult });
     const response = await context.handler(makeRequest());
     const serialized = JSON.stringify(await responseJson(response));
 
-    expect(response.status).toBe(status);
-    expect(serialized).toContain(code);
+    expect(response.status).toBe(202);
+    expect(serialized).toContain("ATH-ABCDEF1234");
+    expect(context.setNotificationStatus).toHaveBeenCalledWith("11111111-1111-4111-8111-111111111111", "failed");
     expect(serialized).not.toContain(config.email.apiKey);
     expect(serialized).not.toContain(config.email.toEmail);
+    expect(context.logger).toHaveBeenCalledWith(expect.objectContaining({ outcome: "accepted_notification_degraded", provider: providerState }));
   });
 
-  it("returns a generic 500 when an unexpected provider failure escapes", async () => {
+  it("keeps the enquiry when the provider throws", async () => {
     const context = setup({ emailFailure: new Error("secret provider diagnostic") });
     const response = await context.handler(makeRequest());
     const serialized = JSON.stringify(await responseJson(response));
 
-    expect(response.status).toBe(500);
-    expect(serialized).toContain("unexpected_error");
+    expect(response.status).toBe(202);
+    expect(serialized).toContain("ATH-ABCDEF1234");
     expect(serialized).not.toContain("secret provider diagnostic");
     expect(context.logger).toHaveBeenCalledWith(
-      expect.objectContaining({ outcome: "unexpected_failure" }),
+      expect.objectContaining({ outcome: "accepted_notification_degraded" }),
     );
   });
 });

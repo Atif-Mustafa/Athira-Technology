@@ -15,7 +15,7 @@ export type ContactEmailMessage = {
   subject: string;
   text: string;
   html: string;
-  requestId: string;
+  idempotencyKey: string;
 };
 
 export type ContactEmailResult =
@@ -50,12 +50,15 @@ export function renderContactEmail(
   submission: ContactSubmission,
   config: ContactServerConfig,
   requestId: string,
+  referenceCode: string,
+  submissionKey: string,
   submittedAt: string,
 ): ContactEmailMessage {
   const interest = getContactOptionLabel(contactInterestOptions, submission.interest);
   const projectStage = getContactOptionLabel(projectStageOptions, submission.projectStage);
   const budgetRange = getContactOptionLabel(budgetRangeOptions, submission.budgetRange);
   const fields = [
+    ["Enquiry reference", referenceCode],
     ["Request ID", requestId],
     ["Submitted at", submittedAt],
     ["Full name", submission.fullName],
@@ -82,7 +85,7 @@ export function renderContactEmail(
     subject: `New website enquiry: ${interest}`,
     text,
     html,
-    requestId,
+    idempotencyKey: submissionKey,
   };
 }
 
@@ -104,7 +107,7 @@ export class ResendContactEmailProvider implements ContactEmailProvider {
           text: message.text,
           html: message.html,
         },
-        { idempotencyKey: message.requestId },
+        { idempotencyKey: message.idempotencyKey },
       );
 
       if (error) {

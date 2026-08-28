@@ -20,7 +20,7 @@ export default function ContactPage() {
       <PageHero
         eyebrow="Discovery contact"
         title="Tell us which workflow or engineering problem you are evaluating"
-        description="Share the minimum context needed for a business conversation. Accepted enquiries are validated, abuse-checked, and delivered to Athira Technology by email without application database storage."
+        description="Share the minimum context needed for a business conversation. Accepted enquiries are validated, abuse-checked, and stored securely for authorized staff before an email notification is attempted."
         breadcrumbs={[{ label: "Home", href: "/" }, { label: "Contact" }]}
       />
       <Section aria-labelledby="contact-form-heading">
