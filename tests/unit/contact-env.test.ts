@@ -76,4 +76,64 @@ describe("contact server environment", () => {
       expect(result.issues.join(" ")).toContain("CONTACT_ALLOWED_ORIGINS");
     }
   });
+
+  it("rejects a CONTACT_ALLOWED_ORIGINS list past the bounded length", () => {
+    const manyOrigins = Array.from({ length: 21 }, (_, index) => `https://alt-${index}.athira.test`).join(",");
+    const result = validateServerEnvironment({
+      ...productionEnvironment,
+      CONTACT_ALLOWED_ORIGINS: manyOrigins,
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues.join(" ")).toContain("CONTACT_ALLOWED_ORIGINS");
+    }
+  });
+
+  it("derives the Preview site origin automatically from VERCEL_PROJECT_PRODUCTION_URL without NEXT_PUBLIC_SITE_URL", () => {
+    const withoutSiteUrl: NodeJS.ProcessEnv = { ...productionEnvironment };
+    delete withoutSiteUrl.NEXT_PUBLIC_SITE_URL;
+    const result = validateServerEnvironment({
+      ...withoutSiteUrl,
+      VERCEL_PROJECT_PRODUCTION_URL: "athira-technology.vercel.app",
+      VERCEL_URL: "athira-technology-git-feat-branch-team.vercel.app",
+      VERCEL_BRANCH_URL: "athira-technology-git-feat-branch-team.vercel.app",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.config.siteOrigin).toBe("https://athira-technology.vercel.app");
+      expect(result.config.allowedOrigins).toContain("https://athira-technology.vercel.app");
+      expect(result.config.allowedOrigins).toContain(
+        "https://athira-technology-git-feat-branch-team.vercel.app",
+      );
+    }
+  });
+
+  it("derives the site origin from VERCEL_URL when VERCEL_PROJECT_PRODUCTION_URL is absent", () => {
+    const withoutSiteUrl: NodeJS.ProcessEnv = { ...productionEnvironment };
+    delete withoutSiteUrl.NEXT_PUBLIC_SITE_URL;
+    const result = validateServerEnvironment({
+      ...withoutSiteUrl,
+      VERCEL_URL: "athira-technology-git-feat-branch-team.vercel.app",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.config.siteOrigin).toBe(
+        "https://athira-technology-git-feat-branch-team.vercel.app",
+      );
+    }
+  });
+
+  it("still requires a resolvable origin in production when no Vercel deployment URL is available", () => {
+    const withoutSiteUrl: NodeJS.ProcessEnv = { ...productionEnvironment };
+    delete withoutSiteUrl.NEXT_PUBLIC_SITE_URL;
+    const result = validateServerEnvironment(withoutSiteUrl);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.issues.join(" ")).toContain("NEXT_PUBLIC_SITE_URL");
+    }
+  });
 });

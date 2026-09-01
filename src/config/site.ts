@@ -1,4 +1,4 @@
-const localSiteUrl = new URL("http://localhost:3000");
+import { getProductionOrientedSiteUrl } from "../lib/deployment-url";
 
 function resolveContactEmail(): string | null {
   const candidate = process.env.NEXT_PUBLIC_CONTACT_EMAIL?.trim();
@@ -11,23 +11,7 @@ function resolveContactEmail(): string | null {
 }
 
 function resolveSiteUrl(): URL {
-  const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-
-  if (!configuredUrl) {
-    return localSiteUrl;
-  }
-
-  try {
-    const url = new URL(configuredUrl);
-
-    if (url.protocol === "http:" || url.protocol === "https:") {
-      return url;
-    }
-  } catch {
-    // Invalid configuration falls back to the documented local URL.
-  }
-
-  return localSiteUrl;
+  return getProductionOrientedSiteUrl(process.env);
 }
 
 export const siteConfig = {

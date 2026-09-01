@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { validateSupabasePublicEnvironment, type SupabasePublicEnvironmentResult } from "../lib/supabase/config";
+import { parseExplicitOrigin, parseVercelHost } from "../lib/deployment-url";
 
 export { validateSupabasePublicEnvironment } from "../lib/supabase/config";
 export type { SupabasePublicConfig, SupabasePublicEnvironmentResult } from "../lib/supabase/config";
@@ -48,14 +49,21 @@ function normalizeMode(value: string | undefined): RuntimeMode {
   return "development";
 }
 
+const MAX_CONTACT_ALLOWED_ORIGINS = 20;
+
 function parseOrigins(value: string | undefined): string[] | null {
   if (!value?.trim()) {
     return [];
   }
 
+  const candidates = value.split(",");
+  if (candidates.length > MAX_CONTACT_ALLOWED_ORIGINS) {
+    return null;
+  }
+
   const origins: string[] = [];
 
-  for (const candidate of value.split(",")) {
+  for (const candidate of candidates) {
     try {
       const url = new URL(candidate.trim());
       if ((url.protocol !== "http:" && url.protocol !== "https:") || url.origin !== url.href.replace(/\/$/, "")) {
@@ -79,20 +87,29 @@ export function validateServerEnvironment(
   let siteOrigin = "http://localhost:3000";
 
   if (configuredSiteUrl) {
-    try {
-      const url = new URL(configuredSiteUrl);
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
-        issues.push("NEXT_PUBLIC_SITE_URL must use HTTP or HTTPS.");
-      } else if (mode === "production" && url.protocol !== "https:") {
-        issues.push("NEXT_PUBLIC_SITE_URL must use HTTPS in production.");
-      } else {
-        siteOrigin = url.origin;
-      }
-    } catch {
-      issues.push("NEXT_PUBLIC_SITE_URL must be a valid absolute URL.");
+    const url = parseExplicitOrigin(configuredSiteUrl);
+    if (!url) {
+      issues.push("NEXT_PUBLIC_SITE_URL must be a valid absolute HTTP or HTTPS URL.");
+    } else if (mode === "production" && url.protocol !== "https:") {
+      issues.push("NEXT_PUBLIC_SITE_URL must use HTTPS in production.");
+    } else {
+      siteOrigin = url.origin;
     }
-  } else if (mode === "production") {
-    issues.push("NEXT_PUBLIC_SITE_URL is required in production.");
+  } else {
+    // Vercel supplies these automatically for every deployment (Preview and
+    // Production alike), so the owner never has to set NEXT_PUBLIC_SITE_URL
+    // by hand just to keep the contact route's same-origin baseline correct.
+    const automaticUrl =
+      parseVercelHost(environment.VERCEL_PROJECT_PRODUCTION_URL) ??
+      parseVercelHost(environment.VERCEL_URL);
+
+    if (automaticUrl) {
+      siteOrigin = automaticUrl.origin;
+    } else if (mode === "production") {
+      issues.push(
+        "NEXT_PUBLIC_SITE_URL is required in production when no Vercel deployment URL is available.",
+      );
+    }
   }
 
   const apiKey = environment.RESEND_API_KEY?.trim() ?? "";
@@ -152,7 +169,17 @@ export function validateServerEnvironment(
     return { success: false, issues };
   }
 
-  const allowedOrigins = [...new Set([siteOrigin, ...(extraOrigins ?? [])])];
+  // Trust the exact branch/deployment host Vercel assigns this deployment,
+  // in addition to whatever request.url reports, so a same-origin Preview
+  // request is accepted without the owner maintaining CONTACT_ALLOWED_ORIGINS.
+  const automaticOrigins = [
+    parseVercelHost(environment.VERCEL_BRANCH_URL)?.origin,
+    parseVercelHost(environment.VERCEL_URL)?.origin,
+  ].filter((origin): origin is string => Boolean(origin));
+
+  const allowedOrigins = [
+    ...new Set([siteOrigin, ...automaticOrigins, ...(extraOrigins ?? [])]),
+  ];
   const localHashSecret = hashSecret || "athira-local-contact-rate-limit-only-not-for-production";
 
   return {

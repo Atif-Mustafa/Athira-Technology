@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 import { createSecurityHeaders } from "./src/config/security";
 
-const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-const isProductionHttps =
-  process.env.VERCEL_ENV === "production" &&
-  Boolean(configuredSiteUrl?.startsWith("https://"));
+// Vercel production deployments are always served over HTTPS, so identifying
+// the environment is sufficient without requiring NEXT_PUBLIC_SITE_URL to be
+// manually kept in sync just to unlock the HSTS header.
+const isProductionHttps = process.env.VERCEL_ENV === "production";
 const isPreview = process.env.VERCEL_ENV === "preview";
 
 const nextConfig: NextConfig = {

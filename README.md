@@ -65,7 +65,7 @@ Variables prefixed with `NEXT_PUBLIC_` are intentionally available to browser bu
 
 | Variable | Local development | Vercel preview | Vercel production | Purpose |
 |---|---|---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | Optional; defaults to `http://localhost:3000` | Required HTTPS preview/branch origin | Required canonical HTTPS origin | Metadata, canonical URLs, structured data, robots, sitemap, and accepted contact origin |
+| `NEXT_PUBLIC_SITE_URL` | Optional; defaults to `http://localhost:3000` | Leave unset; resolved automatically from Vercel's `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL` | Recommended stable canonical HTTPS origin (falls back to `VERCEL_PROJECT_PRODUCTION_URL`) | Metadata, canonical URLs, structured data, robots, sitemap, and the contact route's same-origin baseline |
 | `NEXT_PUBLIC_CONTACT_EMAIL` | Optional | Optional | Optional, owner-approved public mailbox only | Public fallback displayed on `/contact` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Required for database/auth work | Required | Required | Public Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Required for database/auth work | Required | Required | Public publishable key; RLS remains authoritative |
@@ -76,9 +76,9 @@ Variables prefixed with `NEXT_PUBLIC_` are intentionally available to browser bu
 | `UPSTASH_REDIS_REST_URL` | Optional; local memory limiter is explicit | Required | Required | HTTPS Upstash Redis REST endpoint |
 | `UPSTASH_REDIS_REST_TOKEN` | Optional with no URL | Required | Required | Server-only Upstash token |
 | `RATE_LIMIT_HASH_SECRET` | Optional local-only default | Required, 32+ characters | Required, 32+ characters | Keyed hash secret for pseudonymous rate-limit identifiers |
-| `CONTACT_ALLOWED_ORIGINS` | Optional | Optional | Optional | Comma-separated additional origins, with no paths |
+| `CONTACT_ALLOWED_ORIGINS` | Optional | Optional; only for a genuinely additional trusted origin | Optional; only for a genuinely additional trusted origin | Comma-separated additional origins, with no paths |
 
-Vercel supplies `VERCEL`, `VERCEL_ENV`, and forwarding headers. Do not add them as project secrets or imitate them in a public deployment. Runtime validation permits a process-local limiter only outside production and fails closed when distributed-rate-limit protection is incomplete; missing email configuration degrades notification after durable persistence.
+Vercel supplies `VERCEL`, `VERCEL_ENV`, `VERCEL_URL`, `VERCEL_BRANCH_URL`, `VERCEL_PROJECT_PRODUCTION_URL`, and forwarding headers automatically for every deployment. Do not add them as project secrets or imitate them in a public deployment — the app already reads them (`src/lib/deployment-url.ts`, `src/server/env.ts`) to resolve Preview/Production origins without owner action. Runtime validation permits a process-local limiter only outside production and fails closed when distributed-rate-limit protection is incomplete; missing email configuration degrades notification after durable persistence.
 
 See [deployment.md](docs/deployment.md) for account setup, environment scoping, preview behavior, production checks, and rollback instructions.
 
@@ -198,8 +198,8 @@ Content modules are typed plain data with no JSX or callbacks. Server-only crede
 
 - Static-compatible CSP with no wildcard sources and no production `unsafe-eval`; `unsafe-inline` is retained for Next.js inline bootstrapping/styles without forcing nonce-based dynamic rendering.
 - `X-Content-Type-Options`, frame protection, strict referrer policy, limited permissions policy, and cross-origin opener isolation apply site-wide.
-- HSTS and `upgrade-insecure-requests` are emitted only for Vercel production when the configured public origin is HTTPS; localhost and previews do not receive HSTS.
-- Metadata, canonical URLs, structured data, robots, and sitemap use `NEXT_PUBLIC_SITE_URL`.
+- HSTS and `upgrade-insecure-requests` are emitted only for Vercel production (`VERCEL_ENV=production`, always HTTPS); localhost and previews do not receive HSTS.
+- Metadata, canonical URLs, structured data, robots, and sitemap use `NEXT_PUBLIC_SITE_URL`, automatically falling back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL` when it is unset (see `src/lib/deployment-url.ts`).
 - The admin demonstration is noindex and robots excludes admin/API paths.
 - The contact form has visible labels, keyboard focus, associated validation, live status, reduced-motion support, and mobile overflow coverage.
 - Public content stays server-rendered/static; the contact route is dynamic and uncached, while the interactive client boundary is limited to the form.

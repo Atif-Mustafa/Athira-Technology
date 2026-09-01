@@ -92,6 +92,92 @@ describe("contact request security", () => {
     ).toBe(false);
   });
 
+  it("accepts a same-origin local request without any configured origin list", () => {
+    const localConfig: ContactServerConfig = {
+      ...config,
+      mode: "development",
+      siteOrigin: "http://localhost:3000",
+      allowedOrigins: ["http://localhost:3000"],
+    };
+
+    expect(
+      isAllowedContactOrigin(
+        new Request("http://localhost:3000/api/contact", {
+          headers: { origin: "http://localhost:3000" },
+        }),
+        localConfig,
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts a same-origin Vercel Preview request automatically, without the origin being in the configured allowlist", () => {
+    const previewConfig: ContactServerConfig = {
+      ...config,
+      siteOrigin: "https://athira-technology.vercel.app",
+      allowedOrigins: ["https://athira-technology.vercel.app"],
+    };
+    const previewRequestOrigin = "https://athira-technology-git-feat-branch-team.vercel.app";
+
+    expect(
+      isAllowedContactOrigin(
+        new Request(`${previewRequestOrigin}/api/contact`, {
+          headers: { origin: previewRequestOrigin },
+        }),
+        previewConfig,
+      ),
+    ).toBe(true);
+  });
+
+  it("accepts an explicitly configured CONTACT_ALLOWED_ORIGINS origin even when it differs from the request", () => {
+    const configWithExtraOrigin: ContactServerConfig = {
+      ...config,
+      allowedOrigins: [...config.allowedOrigins, "https://staging.athira.test"],
+    };
+
+    expect(
+      isAllowedContactOrigin(
+        new Request("https://athira.test/api/contact", {
+          headers: { origin: "https://staging.athira.test" },
+        }),
+        configWithExtraOrigin,
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects a malformed Origin header", () => {
+    expect(
+      isAllowedContactOrigin(
+        new Request("https://athira.test/api/contact", {
+          headers: { origin: "not-a-valid-origin" },
+        }),
+        config,
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects an unrelated *.vercel.app deployment origin", () => {
+    expect(
+      isAllowedContactOrigin(
+        new Request("https://athira.test/api/contact", {
+          headers: { origin: "https://some-other-project.vercel.app" },
+        }),
+        config,
+      ),
+    ).toBe(false);
+  });
+
+  it("preserves the existing missing-Origin policy: rejected in production, allowed outside it", () => {
+    expect(
+      isAllowedContactOrigin(new Request("https://athira.test/api/contact"), config),
+    ).toBe(false);
+    expect(
+      isAllowedContactOrigin(
+        new Request("https://athira.test/api/contact"),
+        { ...config, mode: "development" },
+      ),
+    ).toBe(true);
+  });
+
   it("logs operational categories without accepting personal fields", () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => undefined);
     logContactEvent({

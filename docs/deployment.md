@@ -50,7 +50,7 @@ Use Vercel's encrypted Environment Variables settings. Variables without `NEXT_P
 
 ### Local development
 
-- `NEXT_PUBLIC_SITE_URL`: optional; defaults to `http://localhost:3000`.
+- `NEXT_PUBLIC_SITE_URL`: optional; defaults to `http://localhost:3000`. `.env.local` may set it explicitly to the same value.
 - Resend variables: required only when intentionally testing real local delivery.
 - Upstash variables: optional. Their absence selects the explicit local memory limiter.
 - Never use the production recipient or production provider key for routine local tests.
@@ -58,19 +58,20 @@ Use Vercel's encrypted Environment Variables settings. Variables without `NEXT_P
 ### Preview
 
 - Add all Resend, Upstash, hash-secret, sender, and recipient variables in Preview scope.
-- Set `NEXT_PUBLIC_SITE_URL` to an HTTPS preview origin or stable branch alias so preview metadata is deterministic.
+- Do **not** set `NEXT_PUBLIC_SITE_URL` in Preview and do not update it per deployment. Vercel's automatic `VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL` / `VERCEL_BRANCH_URL` system variables resolve both the canonical/SEO origin and the contact route's trusted origins for every new Preview deployment on their own (see `src/lib/deployment-url.ts` and `src/server/env.ts`).
+- Preview canonical/OG/structured-data URLs intentionally point at the stable production origin rather than the ephemeral Preview host — Preview already responds `noindex` (see `src/app/robots.ts`), so this keeps SEO output deterministic without weakening anything.
 - Use a controlled test recipient and preview provider resources where possible.
-- `CONTACT_ALLOWED_ORIGINS` is needed only for additional browser origins. The actual same-origin preview request is accepted automatically.
+- `CONTACT_ALLOWED_ORIGINS` is needed only for a genuinely additional browser origin (e.g. a second alias). The actual same-origin Preview request — and the deployment's own branch/deployment host — is accepted automatically.
 - HSTS is intentionally omitted from preview responses.
 - Treat preview URLs as potentially accessible unless Vercel access controls are enabled. Do not enter real sensitive enquiry content.
 
 ### Production
 
-- Set a real canonical HTTPS `NEXT_PUBLIC_SITE_URL` with no fabricated placeholder.
+- Set a real canonical HTTPS `NEXT_PUBLIC_SITE_URL` with no fabricated placeholder. If omitted, the app falls back to Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, but an explicit custom domain is preferred once one exists.
 - Configure all Resend and Upstash variables and a 32+ character hash secret in Production scope.
 - Set the optional public contact email only after the mailbox and process are approved.
 - Do not manually set Vercel's system variables. The contact route relies on Vercel-controlled forwarding headers.
-- HSTS is emitted only when Vercel identifies the production environment and the configured public URL is HTTPS.
+- HSTS is emitted whenever Vercel identifies the production environment (`VERCEL_ENV=production`); Vercel production is always served over HTTPS, so this no longer depends on `NEXT_PUBLIC_SITE_URL` being set.
 
 ## 5. Validate configuration before promotion
 

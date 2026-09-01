@@ -157,7 +157,7 @@ The CMS introduces no new secret. Preview and Production still require:
 | `NEXT_PUBLIC_SUPABASE_URL` | Public |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public |
 | `SUPABASE_SECRET_KEY` | Server only / secret; Auth administration only |
-| `NEXT_PUBLIC_SITE_URL` | Public canonical origin |
+| `NEXT_PUBLIC_SITE_URL` | Public canonical origin; optional (falls back to Vercel's automatic `VERCEL_PROJECT_PRODUCTION_URL`/`VERCEL_URL`) |
 
 Never prefix `SUPABASE_SECRET_KEY` with `NEXT_PUBLIC_`. Never paste values into chat. A new Vercel deployment is required after changing environment values.
 
